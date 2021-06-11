@@ -20,6 +20,7 @@ class AuthenticationManager(BaseManager):
         return self.__token
     
     def acquire_new_token(self):
-        appkey, accessId, accessKeySecret = self.config_manager.get_keys()
-        self.__token, self.__expiration_timestamp = self.api_manager.get_user_token(accessId, accessKeySecret)
+        keys = self.config_manager.get_keys()
+        self.__token, self.__expiration_timestamp = self.api_manager.get_user_token(
+            keys['accessId'], keys['accessKeySecret'])
 

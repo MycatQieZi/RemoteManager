@@ -25,11 +25,17 @@ class APIManager(BaseManager):
         return content['token'], content['expireTime']
 
     def get_version_check(self, auth, version_num):
-        pass
+        headers = {'appkey':auth['appkey'], 'token':auth['token']}
+        params = {'appkey':auth['appkey'], 'versionNum':version_num}
+        url = self.__assemble_url("/version/check")
+        self.logger.debug("GET version check: %s", url)
+        data = self.__http_get(url, params, headers)
+        if not data['code'] == 1:
+            raise ICBRequestError(data['msg'])
+        return data['content']        
 
     def __assemble_url(self, url, api_prefix="default"):
-        assembled_url = self.host_addr + (self.api_prefix if api_prefix=="default" else api_prefix) + url
-        return assembled_url
+        return self.host_addr + (self.api_prefix if api_prefix=="default" else api_prefix) + url
 
     def __http_post(self, url, data, headers={}): # header is a dict
         headers["Content-type"] = "application/json;charset=UTF-8"

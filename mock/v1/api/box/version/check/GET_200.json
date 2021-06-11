@@ -1,0 +1,18 @@
+{
+	"code": 1,
+	"msg": "success",
+	"content": {
+		"upgradeMark": 2,
+		"upgradeList": [{
+			"versionCode": "v1233457",
+			"versionNum": "1.4",
+			"fileMd5": "1234546",
+      "remark":"reworked UI"
+		}, {
+			"versionCode": "v12334578",
+			"versionNum": "1.5",
+			"fileMd5": "12213131",
+      "remark":"more user-friendly UI"
+		}]
+	}
+}

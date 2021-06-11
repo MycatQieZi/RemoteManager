@@ -6,6 +6,7 @@ from request.api import APIManager
 from request.auth_manager import AuthenticationManager
 from path_manager import PathManager 
 from base_manager import BaseManager
+from gui.gui_manager import GUIManager
 from conf.consts import Envs
 
 class BoxUpdateModule(BaseManager):
@@ -28,13 +29,19 @@ class BoxUpdateModule(BaseManager):
         """
         initializing managers that handle API comm, authentication token, and abstracted HTTP requests
         """
+        
         self.api_manager = APIManager(self.config_manager, env)
         self.auth_manager = AuthenticationManager(self.api_manager, self.config_manager, env)
         self.request_manager = RequestManager(
             self.config_manager, self.api_manager, self.auth_manager, env)
+        self.gui_manager = GUIManager(
+            env,
+            getUserToken=self.auth_manager.acquire_new_token,
+            getVersionCheck=self.request_manager.get_version_check)
 
     def do_stuff(self):
         self.logger.debug("Acquired token: %s", self.auth_manager.get_token())
+        self.request_manager.get_version_check()
     
     def start(self):
         self.logger.info('BoxHelper Update Module is starting...')
@@ -43,4 +50,4 @@ class BoxUpdateModule(BaseManager):
 
 if __name__ == '__main__':
     update_module = BoxUpdateModule(Envs.DEV)
-    update_module.start()
+    # update_module.start()

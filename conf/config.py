@@ -23,7 +23,14 @@ class ConfigManager(BaseManager):
         return self.__api_prefix
 
     def get_keys(self):
-        return (self.__appkey, self.__access_id, self.__access_key_secret)
+        return {
+            'appkey': self.__appkey, 
+            'accessId': self.__access_id, 
+            'accessKeySecret': self.__access_key_secret
+        }
+
+    def get_version_info(self):
+        return {'versionNum': '1.2', 'versionCode':'v13111'}
 
     def read_ini_configs(self, path):
         config = configparser.ConfigParser()

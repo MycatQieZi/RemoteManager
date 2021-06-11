@@ -11,4 +11,4 @@ FOR /F "delims=" %%A IN ('%COMMAND%') DO (
 )
 
 :Exec
-python %SCRIPT_PATH%\mock-server --dir=.\mock --debug
+python %SCRIPT_PATH%\mock-server --dir=. --debug
