@@ -2,8 +2,8 @@ from misc.exceptions import HttpRequestError, ICBRequestError
 import requests
 from base_manager import BaseManager
 
-class RequestManager(BaseManager):
 
+class RequestManager(BaseManager):
     def __init__(self, config_manager, api_manager, auth_manager, env):
         super().__init__(env)
         self.config_manager = config_manager
@@ -16,34 +16,38 @@ class RequestManager(BaseManager):
 
     def get_version_check(self):
         auth = {
-            # 'token': self.auth_manager.get_token(), 
+            # 'token': self.auth_manager.get_token(),
             'appkey': self.config_manager.get_keys()['appkey']
         }
         version_info = self.config_manager.get_version_info()
         try:
-            content = self.api_manager.get_version_check(auth, version_info['versionNum'])
+            content = self.api_manager.get_version_check(
+                auth, version_info['versionNum'])
         except HttpRequestError as err:
             self.logger.error("%s", err)
-            return 
+            return
         except ICBRequestError as err:
             self.logger.error("%s", err)
-            return 
-        
+            return
+
         upgrade_mark = content['upgradeMark']
         upgrade_list = content['upgradeList']
         self.logger.debug("upgrade mark: %s, upgrade list: %s", upgrade_mark, upgrade_list)
         return content
-    
-    def postheartbeatinfo(self):
+        
+    def post_heartbeat_info(self, heartbeat_info):
         auth = {
-            'token': self.auth_manager.get_token(), 
+            'token': self.auth_manager.get_token(),
             'appkey': self.config_manager.get_keys()['appkey']
         }
         try:
-            content = self.api_manager.fillHeartbeatStruct()
+            content = self.api_manager.post_heartbeat_info(
+                auth, heartbeat_info)
         except HttpRequestError as err:
             self.logger.error("%s", err)
-            return 
+            return
         except ICBRequestError as err:
             self.logger.error("%s", err)
-            return 
+            return
+        # TODO: handling stuffs
+        return content

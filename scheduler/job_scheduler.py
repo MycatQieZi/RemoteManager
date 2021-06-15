@@ -1,11 +1,5 @@
 from base_manager import BaseManager
-from threading import _Timer
-
-class RepeatingTimer(_Timer): 
-    def run(self):
-        while not self.finished.is_set():
-            self.function(*self.args, **self.kwargs)
-            self.finished.wait(self.interval)
+from scheduler.repeating_timer import RepeatingTimer
 
 class JobScheduler(BaseManager):
 

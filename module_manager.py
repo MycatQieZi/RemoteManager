@@ -7,6 +7,8 @@ from request.auth_manager import AuthenticationManager
 from path_manager import PathManager
 from base_manager import BaseManager
 from gui.gui_manager import GUIManager
+from heartbeat.heartbeatdata import HeartBeatManager
+from scheduler.repeating_timer import RepeatingTimer
 from conf.consts import Envs
 
 
@@ -34,6 +36,10 @@ class BoxUpdateModule(BaseManager):
         self.auth_manager = AuthenticationManager(self.api_manager, self.config_manager, self.env)
         self.request_manager = RequestManager(
             self.config_manager, self.api_manager, self.auth_manager, self.env)
+        
+        self.heartbeat_manager = HeartBeatManager(self.config_manager, self.request_manager, self.env) 
+        self.repeating_timer = RepeatingTimer(30.0, self.heartbeat_manager.send_heartbeat())
+
         
 
     # def do_stuff(self):

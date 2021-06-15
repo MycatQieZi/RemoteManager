@@ -1,12 +1,5 @@
-from threading import Timer
+from scheduler.repeating_timer import RepeatingTimer
 from heartbeat.heatbeatdata import fillHeartbeatStruct
-
-
-class RepeatingTimer(Timer):
-	def run(self):
-		while not self.finished.is_set():
-			self.function(*self.args, **self.kwargs)
-			self.finished.wait(self.interval)
 	
 t = RepeatingTimer(5.0, fillHeartbeatStruct)
 t.start()

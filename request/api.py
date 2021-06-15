@@ -34,6 +34,14 @@ class APIManager(BaseManager):
             raise ICBRequestError(data['msg'])
         return data['content']        
 
+    def post_heartbeat_info(self, auth, heartbeat_info):
+        headers = auth
+        url = self.__assemble_url("/heartbeat")
+        # add some logging
+        data = self.__http_post(url, heartbeat_info, headers)
+        # TODO: response handling
+        retur data
+
     def __assemble_url(self, url, api_prefix="default"):
         return self.host_addr + (self.api_prefix if api_prefix=="default" else api_prefix) + url
 
