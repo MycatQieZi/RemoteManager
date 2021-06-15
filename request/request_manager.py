@@ -16,7 +16,7 @@ class RequestManager(BaseManager):
 
     def get_version_check(self):
         auth = {
-            'token': self.auth_manager.get_token(), 
+            # 'token': self.auth_manager.get_token(), 
             'appkey': self.config_manager.get_keys()['appkey']
         }
         version_info = self.config_manager.get_version_info()

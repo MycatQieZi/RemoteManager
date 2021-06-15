@@ -11,7 +11,7 @@ class AuthenticationManager(BaseManager):
         self.config_manager = config_manager
 
         # acquire token for the first time
-        self.acquire_new_token()
+        # self.acquire_new_token()
 
         self.logger.debug(f"{self.module_name} successfully initialized...")
 

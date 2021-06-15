@@ -25,7 +25,7 @@ class APIManager(BaseManager):
         return content['token'], content['expireTime']
 
     def get_version_check(self, auth, version_num):
-        headers = {'appkey':auth['appkey'], 'token':auth['token']}
+        headers = auth
         params = {'appkey':auth['appkey'], 'versionNum':version_num}
         url = self.__assemble_url("/version/check")
         self.logger.debug("GET version check: %s", url)

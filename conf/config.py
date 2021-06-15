@@ -34,5 +34,5 @@ class ConfigManager(BaseManager):
 
     def read_ini_configs(self, path):
         config = configparser.ConfigParser()
-        config.read(path)
+        config.read(path, encoding="UTF-8")
         return config
