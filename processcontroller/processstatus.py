@@ -1,43 +1,60 @@
 import os
-import sys
-import traceback
-import time
 import subprocess
-# import psutil
+import traceback
 
 FREESWITCH_PROCESS_NAME = 'FreeSwitch'
-JAVA_PROCESS_NAME = 'java'
+JAVA_PROCESS_PORT = '18080'
 
 class getProcessStatus:
 	def __init__(self):
-		self.REG_CALLBOX, self.REG_NUMCONVERT = self.freeswitchStatus()
+		start = 'start'
 	
-	def isRunning(self, process_name):
+	def isFreeSwitchRunning(self):
 		try:
-			process = len(subprocess.check_output(
-				["tasklist", "|", "findstr", process_name],
-				shell = True,
-				stdin = subprocess.DEVNULL,
-				stderr = subprocess.STDOUT
-			))
-		except subprocess.CalledProcessError:
-			raise
+			process = len(os.popen(
+				"tasklist | findstr " + FREESWITCH_PROCESS_NAME
+			).readlines())
 		except Exception:
 			raise
 		else:
 			if process >= 1:
-				return True
+				fs_flag =  True
 			else:
-				return False
+				fs_flag = False
+			return fs_flag
+	
+	def freeswith_call_status(self):
+		try:
+			self.isFreeSwitchRunning()
+		except subprocess.CalledProcessError:
+			return None
+		try:
+			proc = subprocess.check_output(
+				['C:\\Program Files\\FreeSWITCH\\fs_cli.exe', '-x', 'show calls'],
+				shell=True,
+				stdin=subprocess.DEVNULL,
+				stderr=subprocess.STDOUT)
+		except subprocess.CalledProcessError:
+			#print('sofia status returned nothing')
+			return None
+		call_num = ""
+		if proc != 0:
+			result = proc.decode('utf-8')
+			result_list = result.split(' ')
+			result_list_final = []
+			for i in result_list:
+				if i == '':
+					pass
+				else:
+					result_list_final.append(i)
+			call_num_list = result_list_final[-2].split('\t')
+			call_num = call_num_list[0]
+		return call_num[-1]
+		
 	
 	def freeswitchStatus(self):
-		'''
-		该函数是用来查看本地fs的双向注册状态，即为callbox的注册状态和numconvert的注册状态
-		输入：
-		输出：<str>callbox注册状态，<str>numconvert注册状态
-		'''
 		try:
-			self.isRunning(FREESWITCH_PROCESS_NAME)
+			self.isFreeSwitchRunning()
 		except subprocess.CalledProcessError:
 			return None
 		try:
@@ -48,7 +65,7 @@ class getProcessStatus:
 				stderr=subprocess.STDOUT)
 		except subprocess.CalledProcessError:
 			#print('sofia status returned nothing')
-			return None
+			return {'reg_numconvert':'unknown', 'reg_callbox': 'unknown'}
 		# proc.communicate()
 		remote_fs_conn_status = ''
 		callbox_conn_status = ''
@@ -68,9 +85,49 @@ class getProcessStatus:
 					callbox_conn_status = result_list_final[result_list_final.index(i) + 1]
 		remote_fs_conn_status_list = remote_fs_conn_status.split('\t')
 		callbox_conn_status_list = callbox_conn_status.split('\t')
-		return remote_fs_conn_status_list[-1][:-2], callbox_conn_status_list[-1][:-2]
+		return {'reg_numconvert':remote_fs_conn_status_list[-1][:-2], 'reg_callbox': callbox_conn_status_list[-1][:-2]}
 	
 	def isJavaRunning(self):
-		if self.isRunning(JAVA_PROCESS_NAME):
-		
+		try:
+			process = len(os.popen(
+				"netstat | findstr " + JAVA_PROCESS_PORT
+			).readlines())
+		except Exception:
+			pass
+		else:
+			if process >= 1:
+				return True
+			else:
+				return False
 	
+	def keepFsAlive(self):
+		if self.isFreeSwitchRunning():
+			return None
+		else:
+			try:
+				os.system('"C:\\Program Files\\FreeSWITCH\\FreeSwitchConsole.exe" -nc')
+			except Exception:
+				print(traceback.format_exc())
+				return 0
+			else:
+				try:
+					self.isRunning(FREESWITCH_PROCESS_NAME)
+				
+				except subprocess.CalledProcessError:
+					#print("fs is stopped")
+					raise
+				else:
+					return 1
+			
+	def keepJavaAlive(self):
+		if self.isJavaRunning():
+			return None
+		else:
+			#TODO
+			#添加Java的启动脚本
+			print()
+
+	
+	
+	
+		

@@ -4,10 +4,11 @@ from conf.config import ConfigManager
 from request.request_manager import RequestManager
 from request.api import APIManager
 from request.auth_manager import AuthenticationManager
-from path_manager import PathManager 
+from path_manager import PathManager
 from base_manager import BaseManager
 from gui.gui_manager import GUIManager
 from conf.consts import Envs
+
 
 class BoxUpdateModule(BaseManager):
     def __init__(self, env):

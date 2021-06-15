@@ -33,4 +33,17 @@ class RequestManager(BaseManager):
         upgrade_list = content['upgradeList']
         self.logger.debug("upgrade mark: %s, upgrade list: %s", upgrade_mark, upgrade_list)
         return content
-
+    
+    def postheartbeatinfo(self):
+        auth = {
+            'token': self.auth_manager.get_token(), 
+            'appkey': self.config_manager.get_keys()['appkey']
+        }
+        try:
+            content = self.api_manager.fillHeartbeatStruct()
+        except HttpRequestError as err:
+            self.logger.error("%s", err)
+            return 
+        except ICBRequestError as err:
+            self.logger.error("%s", err)
+            return 

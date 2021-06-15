@@ -12,6 +12,3 @@ class GetYamlStruct:
 		f.close()
 		content = yaml.safe_load(f_content)
 		return content
-
-a = GetYamlStruct("./model/data.yml").content
-print(a)

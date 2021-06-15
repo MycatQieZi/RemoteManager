@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "C:\\Users\\Administrator\\anaconda3\\envs\\box-helper\\python.exe"
+    "python.pythonPath": "C:\\Users\\Rechal\\Anaconda3\\envs\\icb-deploy\\python.exe",
+    "python.formatting.provider": "yapf"
 }
