@@ -32,9 +32,10 @@ class RequestManager(BaseManager):
 
         upgrade_mark = content['upgradeMark']
         upgrade_list = content['upgradeList']
-        self.logger.debug("upgrade mark: %s, upgrade list: %s", upgrade_mark, upgrade_list)
+        self.logger.debug("upgrade mark: %s, upgrade list: %s", upgrade_mark,
+                          upgrade_list)
         return content
-        
+
     def post_heartbeat_info(self, heartbeat_info):
         auth = {
             'token': self.auth_manager.get_token(),
@@ -43,6 +44,7 @@ class RequestManager(BaseManager):
         try:
             content = self.api_manager.post_heartbeat_info(
                 auth, heartbeat_info)
+
         except HttpRequestError as err:
             self.logger.error("%s", err)
             return

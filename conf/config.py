@@ -9,7 +9,6 @@ class ConfigManager(BaseManager):
 
         self.__host_address = CONFIG[env]['host_addr']
         self.__api_prefix = CONFIG[env]['api_prefix']
-
         self.config = self.read_ini_configs(path_manager.get_ini_path())
         self.__appkey = self.config['appkey']['key']
         self.__access_id = self.config['accessid']['id']

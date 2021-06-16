@@ -30,11 +30,10 @@ class HeartBeatManager(BaseManager):
         mem_rate_info = system_info.mem_rate()
         mac_name_ip_info = system_info.mac_name_ip()
 
-        #TODO
-        #获取版本信息
+        #TODO:get version info
         struct.content.update
         struct.content['BasicInfo']['version'] = '1.2.1'
-        struct.content['BasicInfo']['host_ip'] = '10000'
+        struct.content['BasicInfo']['host_ip'] = mac_name_ip_info['addr']
         struct.content['BasicInfo']['callbox_ip'] = '192.168.65.176'
         struct.content['BasicInfo']['app_key'] = app_key
         struct.content['BasicInfo']['access_id'] = access_id
