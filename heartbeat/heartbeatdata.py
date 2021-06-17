@@ -1,16 +1,16 @@
+from request.request_manager import RequestManager
 from yamlmanager import GetYamlStruct
 from processcontroller.processstatus import getProcessStatus
 from processcontroller.systeminfo import getSystemInfo
 from conf.config import ConfigManager
-from conf.consts import Envs
-from path_manager import PathManager
+from utils.my_logger import logger
 
 
-class HeartBeatManager(BaseManager):
-    def __init__(self, config_manager, request_manager, env):
-        super().__init__(env)
-        self.config_manager = config_manager
-        self.request_manager = request_manager
+@logger
+class HeartBeatManager():
+    def __init__(self):
+        self.config_manager = ConfigManager()
+        self.request_manager = RequestManager()
 
     def fill_heartbeat_struct(self):
         CONFIG_PATH = 'model/data.yml'

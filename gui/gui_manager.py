@@ -1,12 +1,13 @@
 from PyQt5.QtGui import * 
 from PyQt5.QtWidgets import * 
-from base_manager import BaseManager
 from gui.sys_tray import SysTray
+from utils.my_logger import logger
+
 import traceback
 
-class GUIManager(BaseManager):
-    def __init__(self, env, **fns):
-        super().__init__(env)
+@logger
+class GUIManager():
+    def __init__(self, **fns):
         self.app = QApplication([])
         self.app.setQuitOnLastWindowClosed(False)
 
@@ -22,7 +23,7 @@ class GUIManager(BaseManager):
         try:
             getUserToken()
         except Exception as e:
-            self.logger.error(traceback.format_exc())
+            self.error(traceback.format_exc())
 
 
     def onClickGetVersionCheck(self, getVersionCheck):
@@ -30,9 +31,9 @@ class GUIManager(BaseManager):
         try:
             content = getVersionCheck()
         except Exception as e:
-            self.logger.error(traceback.format_exc())
+            self.error(traceback.format_exc())
         else:
-            self.logger.debug("GET version check: %s", str(content))
+            self.debug("GET version check: %s", str(content))
         
 
 if __name__ == '__main__':

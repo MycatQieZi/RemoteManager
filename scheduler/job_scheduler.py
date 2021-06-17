@@ -1,10 +1,10 @@
-from base_manager import BaseManager
 from scheduler.repeating_timer import RepeatingTimer
+from utils.my_logger import logger
 
-class JobScheduler(BaseManager):
+@logger
+class JobScheduler:
 
-    def __init__(self, env):
-        super().__init__(env)
+    def __init__(self):
         r_timer = self.set_update_looper(self.do_sth)
         r_timer.start()
 
@@ -13,4 +13,4 @@ class JobScheduler(BaseManager):
         
 
     def do_sth(self):
-        self.logger.debug("timer auto logging test")
+        self.debug("timer auto logging test")

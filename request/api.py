@@ -1,16 +1,17 @@
+from misc.decorators import singleton
+from conf.config import ConfigManager
+from request.encryption import EncryptionManager
+from misc.exceptions import HttpRequestError, ICBRequestError
+from utils.my_logger import logger
+
 import requests, json
 
-from request.encryption import EncryptionManager
-from conf.consts import CONFIG
-from base_manager import BaseManager
-from misc.exceptions import HttpRequestError, ICBRequestError
-
-
-class APIManager(BaseManager):
-    def __init__(self, config_manager, env):
-        super().__init__(env)
-        self.enc_manager = EncryptionManager(env)
-        self.config_manager = config_manager
+@singleton
+@logger
+class APIManager():
+    def __init__(self):
+        self.enc_manager = EncryptionManager()
+        config_manager = ConfigManager()
         self.host_addr = config_manager.get_host_address()
         self.api_prefix = config_manager.get_api_prefix()
 
@@ -40,7 +41,7 @@ class APIManager(BaseManager):
         # add some logging
         data = self.__http_post(url, heartbeat_info, headers)
         # TODO: response handling
-        retur data
+        return data
 
     def __assemble_url(self, url, api_prefix="default"):
         return self.host_addr + (self.api_prefix if api_prefix=="default" else api_prefix) + url

@@ -1,15 +1,19 @@
 import logging, configparser
-from conf.consts import CONFIG, Envs
-from base_manager import BaseManager
+from misc.decorators import singleton
+from settings.settings_manager import SettingsManager
+from conf.consts import CONFIG
+from misc.enumerators import Envs, FilePath
+from utils.my_logger import logger
 
-class ConfigManager(BaseManager):
+@singleton
+@logger
+class ConfigManager():
 
-    def __init__(self, path_manager, env):
-        super().__init__(env)
-
-        self.__host_address = CONFIG[env]['host_addr']
-        self.__api_prefix = CONFIG[env]['api_prefix']
-        self.config = self.read_ini_configs(path_manager.get_ini_path())
+    def __init__(self):
+        settings_manager = SettingsManager()
+        self.__host_address = CONFIG[self.env]['host_addr']
+        self.__api_prefix = CONFIG[self.env]['api_prefix']
+        self.config = settings_manager.read_ini_into_config(settings_manager.get_paths()[FilePath.CONFIG])
         self.__appkey = self.config['appkey']['key']
         self.__access_id = self.config['accessid']['id']
         self.__access_key_secret = self.config['accesssecret']['secret']
@@ -30,8 +34,3 @@ class ConfigManager(BaseManager):
 
     def get_version_info(self):
         return {'versionNum': '1.2', 'versionCode':'v13111'}
-
-    def read_ini_configs(self, path):
-        config = configparser.ConfigParser()
-        config.read(path, encoding="UTF-8")
-        return config

@@ -2,7 +2,8 @@ from winreg import *
 
 """
 demo to get Qthz installation path in registry
-"""
+TODO: replace as a generic reg_reading method
+""" 
 
 REG_PATH = "SOFTWARE\\Ect888\\Qthz"
 INSTALL_PATH_KEY = "QthzInstallPath"

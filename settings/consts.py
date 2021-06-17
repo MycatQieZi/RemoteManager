@@ -1,6 +1,8 @@
+DEFAULT_FILE_TEMPLATE = \
+"""\
 [general]
-env=local
-logging=debug
+env=prod
+logging=info
 
 [paths]
 config=\conf\configuration.ini
@@ -10,5 +12,5 @@ jar=
 
 [timer]
 heartbeat=30
-versionCheck=30
-
+versionCheck=14400
+"""

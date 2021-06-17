@@ -1,6 +1,6 @@
-from threading import _Timer
+from threading import Timer
 
-class RepeatingTimer(_Timer): 
+class RepeatingTimer(Timer): 
     def run(self):
         while not self.finished.is_set():
             self.function(*self.args, **self.kwargs)

@@ -1,9 +1,11 @@
-from base_manager import BaseManager
+from misc.decorators import singleton
+from utils.my_logger import logger
 
-
-class EncryptionManager(BaseManager):
-    def __init__(self, env):
-        super().__init__(env)
+@singleton
+@logger
+class EncryptionManager():
+    def __init__(self):
+        pass
 
     def encrypt(self, string_raw):
         return string_raw

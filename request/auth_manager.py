@@ -1,19 +1,21 @@
-from conf.consts import CONFIG, Envs
-from base_manager import BaseManager
+from misc.decorators import singleton
+from conf.config import ConfigManager
+from request.api import APIManager
+from utils.my_logger import logger
 
-class AuthenticationManager(BaseManager):
+@singleton
+@logger
+class AuthenticationManager:
 
-    def __init__(self, api_manager, config_manager, env):
-        super().__init__(env)
-        
+    def __init__(self):
         # init managers
-        self.api_manager = api_manager
-        self.config_manager = config_manager
+        self.api_manager = APIManager()
+        self.config_manager = ConfigManager()
 
         # acquire token for the first time
         # self.acquire_new_token()
 
-        self.logger.debug(f"{self.module_name} successfully initialized...")
+        self.debug(f"{self.module_name} successfully initialized...")
 
 
     def get_token(self):

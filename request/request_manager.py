@@ -1,16 +1,20 @@
+from misc.decorators import singleton
+from request.auth_manager import AuthenticationManager
+from request.api import APIManager
+from conf.config import ConfigManager
 from misc.exceptions import HttpRequestError, ICBRequestError
+from utils.my_logger import logger
 import requests
-from base_manager import BaseManager
 
-
-class RequestManager(BaseManager):
-    def __init__(self, config_manager, api_manager, auth_manager, env):
-        super().__init__(env)
-        self.config_manager = config_manager
-        self.host_addr = config_manager.get_host_address()
-        self.api_prefix = config_manager.get_api_prefix()
-        self.api_manager = api_manager
-        self.auth_manager = auth_manager
+@singleton
+@logger
+class RequestManager():
+    def __init__(self):
+        self.config_manager = ConfigManager()
+        self.host_addr = self.config_manager.get_host_address()
+        self.api_prefix = self.config_manager.get_api_prefix()
+        self.api_manager = APIManager()
+        self.auth_manager = AuthenticationManager()
 
         self.logger.debug(f"{self.module_name} successfully initialized...")
 

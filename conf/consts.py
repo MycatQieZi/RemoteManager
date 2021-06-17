@@ -1,41 +1,33 @@
 import logging
-from enum import Enum
-
-class Envs(Enum):
-    LOCAL = 'local'
-    DEV = 'dev'
-    SIT = 'sit'
-    UAT = 'uat'
-    YMT = 'ymt'
-    PROD = 'prod'
+from misc.enumerators import Envs
 
 CONFIG = {
-    Envs.LOCAL:{
+    Envs.LOCAL.value:{
         "host_addr": "http://192.168.63.47:8888",
         "api_prefix": "/v1/api/center818/box",
         "logging": logging.DEBUG
     },
-    Envs.DEV:{
+    Envs.DEV.value:{
         "host_addr": "http://11.8.39.197:18096",
         "api_prefix": "/v1/api/center818/box",
         "logging": logging.DEBUG
     },
-    Envs.SIT:{
+    Envs.SIT.value:{
         "host_addr":"",
         "api_prefix": "/v1/api/center818/box",
         "logging": logging.DEBUG
     },
-    Envs.UAT:{
+    Envs.UAT.value:{
         "host_addr":"",
         "api_prefix": "/v1/api/center818/box",
         "logging": logging.DEBUG
     },
-    Envs.YMT:{
+    Envs.YMT.value:{
         "host_addr":"",
         "api_prefix": "/v1/api/center818/box",
         "logging": logging.DEBUG
     },
-    Envs.PROD:{
+    Envs.PROD.value:{
         "host_addr":"",
         "api_prefix": "/v1/api/center818/box",
         "logging": logging.INFO
