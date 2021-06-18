@@ -11,7 +11,7 @@ def logger(cls):
     logger = log_manager.logger
     setattr(cls, 'env', env)
     setattr(cls, 'logger', logger)
-    setattr(cls, 'module_name', cls.__class__.__name__)
+    setattr(cls, 'module_name', cls.__name__)
     setattr(cls, 'info', make_logger_methods_self(logger.info))
     setattr(cls, 'debug', make_logger_methods_self(logger.debug))
     setattr(cls, 'warn', make_logger_methods_self(logger.warning))

@@ -1,3 +1,4 @@
+from patching.patch_manager import PatchManager
 from utils.log_manager import LoggerManager
 from settings.settings_manager import SettingsManager
 from conf.config import ConfigManager
@@ -34,6 +35,7 @@ class BoxUpdateModule:
         self.api_manager = APIManager()
         self.auth_manager = AuthenticationManager()
         self.request_manager = RequestManager()
+        self.patch_manager = PatchManager()
         
         self.heartbeat_manager = HeartBeatManager() 
         self.repeating_timer = RepeatingTimer(30.0, self.heartbeat_manager.send_heartbeat)
@@ -48,7 +50,7 @@ class BoxUpdateModule:
         self.info('Starting GUI...')
         self.gui_manager = GUIManager(
             getUserToken=self.auth_manager.acquire_new_token,
-            getVersionCheck=self.request_manager.get_version_check)
+            getVersionCheck=self.patch_manager.check_update)
 
 
 if __name__ == '__main__':

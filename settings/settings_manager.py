@@ -37,6 +37,12 @@ class SettingsManager():
     def get_QTHZ_inst_path(self):
         return self.qthz_inst_path
 
+    def get_patch_dir_path(self):
+        return self.qthz_inst_path+self.__config[SettingsCategories.PATHS.value][SettingsItems.PATCH.value]
+
+    def get_patch_meta_path(self):
+        return self.get_patch_dir_path()+self.__config[SettingsCategories.PATHS.value][SettingsItems.PATCHMETA.value]
+
     def read_QTHZ_inst_path(self):
         self.qthz_inst_path = reg_get_QTHZ_path()
 
@@ -47,7 +53,7 @@ class SettingsManager():
     def verify_config_file_existence(self, path):
         if not os.path.isfile(path):
             self.logger.warning(f"Settings file at {path} doesn't exist, creating default settings...")
-            with open(path, "w") as settings_file:
+            with open(path, "x") as settings_file:
                 settings_file.write(DEFAULT_FILE_TEMPLATE)
 
     def read_ini_into_config(self, path):

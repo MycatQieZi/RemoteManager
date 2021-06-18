@@ -6,6 +6,8 @@ logging=info
 
 [paths]
 config=\conf\configuration.ini
+patch=\patch
+patchmeta=\patch.meta
 fs=‪C:\Program Files\FreeSWITCH
 java=
 jar=
