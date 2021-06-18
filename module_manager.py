@@ -10,7 +10,6 @@ from heartbeat.heartbeatdata import HeartBeatManager
 from scheduler.repeating_timer import RepeatingTimer
 from utils.my_logger import logger
 
-import sys, logging
 
 @logger
 class BoxUpdateModule:
@@ -38,7 +37,7 @@ class BoxUpdateModule:
         self.patch_manager = PatchManager()
         
         self.heartbeat_manager = HeartBeatManager() 
-        self.repeating_timer = RepeatingTimer(30.0, self.heartbeat_manager.send_heartbeat)
+        # self.repeating_timer = RepeatingTimer(30.0, self.heartbeat_manager.send_heartbeat)
 
         
 

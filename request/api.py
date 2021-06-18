@@ -4,7 +4,7 @@ from request.encryption import EncryptionManager
 from misc.exceptions import HttpRequestError, ICBRequestError
 from utils.my_logger import logger
 
-import requests, json
+import requests, json, shutil
 
 @singleton
 @logger
@@ -33,7 +33,19 @@ class APIManager():
         data = self.__http_get(url, params, headers)
         if not data['code'] == 1:
             raise ICBRequestError(data['msg'])
-        return data['content']        
+        return data['content']   
+
+    def get_file_download(self, auth, version_code):
+        headers = auth
+        params = {'appkey':auth['appkey'], 'versionCode':version_code}
+        url = self.__assemble_url("/version/file")
+        self.logger.debug("GET version file: %s", url)
+        try:
+            fname = self.__download_file(url, params, headers)
+        except:
+            self.error("File download failed") 
+        
+        return fname 
 
     def post_heartbeat_info(self, auth, heartbeat_info):
         headers = auth
@@ -72,3 +84,11 @@ class APIManager():
             raise
         else:
             return parsed_dict
+
+    def __download_file(self, url, params, headers=''):
+        local_filename = params['versionCode']+".zip"
+        with requests.get(url, params=params, headers=headers, stream=True) as r:
+            with open(local_filename, 'wb') as f:
+                shutil.copyfileobj(r.raw, f)
+
+        return local_filename

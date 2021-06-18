@@ -5,7 +5,7 @@ from request.request_manager import RequestManager
 from patching.patch_obj import PatchObject
 from utils.my_logger import logger
 from misc.enumerators import UpgradeMark, PatchCyclePhase
-import os, jsonpickle
+import os, jsonpickle, shutil
 
 @singleton
 @logger
@@ -67,6 +67,8 @@ class PatchManager:
         self.state = meta_data['state']
         self.patch_objs = meta_data['list']
         self.debug('Loaded state from meta file')
+
+    
 
     
 
