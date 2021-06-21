@@ -6,12 +6,12 @@
 		"upgradeList": [{
 			"versionCode": "v1233457",
 			"versionNum": "1.4",
-			"fileMd5": "9865cbe4d47a7fff038dd32e30336285",
+			"fileMd5": "18da51971f15de832eaa293ae3278a76",
       "remark":"reworked UI"
 		}, {
 			"versionCode": "v12334578",
 			"versionNum": "1.5",
-			"fileMd5": "9865cbe4d47a7fff038dd32e30336285",
+			"fileMd5": "18da51971f15de832eaa293ae3278a76",
       "remark":"reworked UI againe!"
 		}]
 	}

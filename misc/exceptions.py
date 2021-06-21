@@ -17,3 +17,11 @@ class ICBRequestError(Exception):
 
     def __str__(self):
         return f'请求接口业务异常: {self.message}'
+
+class FileDownloadError(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f'文件下载异常异常: {self.message}'

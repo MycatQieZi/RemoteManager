@@ -1,3 +1,4 @@
+from misc.decorators import singleton
 from PyQt5.QtGui import * 
 from PyQt5.QtWidgets import * 
 from gui.sys_tray import SysTray
@@ -5,6 +6,7 @@ from utils.my_logger import logger
 
 import traceback
 
+@singleton
 @logger
 class GUIManager():
     def __init__(self, **fns):

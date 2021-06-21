@@ -15,7 +15,7 @@ LEVELS = { # all native logging lib levels in ascending order, higher = severer
 }
 
 FORMAT_PATTERN = '[box_daemon, None, None, None] %(asctime)-15s.%(msecs)d [%(levelname)s] %(process)d '+\
-    '--- [%(threadName)s] python [0] : %(message)s'
+    '--- [%(threadName)s] %(module)s [%(lineno)d] : %(message)s'
 
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
 
