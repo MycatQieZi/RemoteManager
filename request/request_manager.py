@@ -5,6 +5,9 @@ from conf.config import ConfigManager
 from misc.exceptions import HttpRequestError, ICBRequestError
 from utils.my_logger import logger
 import requests
+from requests_toolbelt import MultipartEncoder
+import requests
+
 
 @singleton
 @logger
@@ -48,6 +51,28 @@ class RequestManager():
         try:
             content = self.api_manager.post_heartbeat_info(
                 auth, heartbeat_info)
+
+        except HttpRequestError as err:
+            self.logger.error("%s", err)
+            return
+        except ICBRequestError as err:
+            self.logger.error("%s", err)
+            return
+        # TODO: handling stuffs
+        return content
+
+    def post_logs_info(self, path, filename):
+        auth = {
+            'token': self.auth_manager.get_token(),
+            'appkey': self.config_manager.get_keys()['appkey']
+        }
+        data = MultipartEncoder(
+            fields={
+                'propertyMessageXml': ('filename', open(path + filename, 'rb'),
+                                       'text/xml')
+            })
+        try:
+            content = self.api_manager.post_logs_info(auth, data)
 
         except HttpRequestError as err:
             self.logger.error("%s", err)

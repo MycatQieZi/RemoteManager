@@ -54,6 +54,14 @@ class APIManager():
         data = self.__http_post(url, heartbeat_info, headers)
         # TODO: response handling
         return data
+    
+    def post_logs_info(self, auth, logs_info):
+        headers = auth
+        url = self.__assemble_url("/logsdata")
+        # add some logging
+        data = self.__upload_file(url, logs_info, headers)
+        # TODO: response handling
+        return data
 
     def __assemble_url(self, url, api_prefix="default"):
         return self.host_addr + (self.api_prefix if api_prefix=="default" else api_prefix) + url
@@ -71,6 +79,22 @@ class APIManager():
             raise
         else:
             return parsed_dict
+    
+    def __upload_file(self, url, data, headers={}): # header is a dict
+        headers["Content-type"] = data.content_type
+        r = requests.post(url, data=data, headers=headers)
+        if not r.status_code == 200:
+            raise HttpRequestError(r)
+        raw = r.text
+        decrypted = self.enc_manager.decrypt(raw)
+        try:
+            parsed_dict = json.loads(decrypted)
+        except json.decoder.JSONDecodeError:
+            raise
+        else:
+            return parsed_dict
+    
+    
 
     def __http_get(self, url, params, headers=""):
         r = requests.get(url, params=params, headers=headers)

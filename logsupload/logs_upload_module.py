@@ -7,9 +7,12 @@ from utils.my_logger import logger
 @logger
 class LogsUploadManager():
     def __init__(self):
-        #self.config_manager = ConfigManager()
-        #self.request_manager = RequestManager()
-        self.fs_log_path = r"C:\Program Files\FreeSWITCH\log\freeswitch.log"
+        self.config_manager = ConfigManager()
+        self.request_manager = RequestManager()
+        self.fs_log_path_file = r"C:\Program Files\FreeSWITCH\log\freeswitch.log"
+        self.java_log_path_file = ""
+        self.remote_manager_log_path_file = ""
+        self.fs_log_path = "C:\\Program Files\\FreeSWITCH\\log\\"
         self.java_log_path = ""
         self.remote_manager_log_path = ""
         self.DEFAULT_FILE_SIZE = 1024 * 1024
@@ -17,9 +20,10 @@ class LogsUploadManager():
     def check_logs_file_size(self, path):
         logs_file_size = os.path.getsize(path)
         if logs_file_size <= self.DEFAULT_FILE_SIZE:
-            return True
+            return [path]
         else:
-            return False
+            filename_list = self.file_cut_by_linecount(path, 8000)
+            return filename_list
         
     def make_sub_file(self, lines, head, src_name, sub):
         [des_filename, ext_name] = os.path.splitext(src_name)
@@ -28,7 +32,7 @@ class LogsUploadManager():
         try:
             f_out.writelines([head])
             f_out.writelines(lines)
-            return sub + 1
+            return sub + 1, filename
         finally:
             f_out.close()
             
@@ -37,20 +41,27 @@ class LogsUploadManager():
         try:
             head = f_in.readline()
             buf = []
+            filename_list = []
             sub = 1
             for line in f_in:
                 buf.append(line)
                 if len(buf) == count:
-                    sub = self.make_sub_file(buf, head, filename, sub)
+                    sub, filename = self.make_sub_file(buf, head, filename, sub)
                     buf = []
+                    filename_list.append(filename)
             if len(buf) != 0:
-                sub = self.make_sub_file(buf, head, filename, sub)
+                _, filename = self.make_sub_file(buf, head, filename, sub)
+                filename_list.append(filename)
+            return filename_list
         finally:
             f_in.close()
+            #return filename_list
             
-    def send_logs(self, log_file_list):
-        self.request_manager.post_heartbeat_info(log_file_list)
-        return log_file_list
+    def send_logs(self, path, path_file):
+        log_file_list = self.check_logs_file_size(path_file)
+        for i in log_file_list:
+            self.request_manager.post_logs_info(path, i)
+        return None
         
     def delete_sended_logs(self):
         return None
