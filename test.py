@@ -12,4 +12,3 @@ module_manager = BoxUpdateModule()
 heartbeat_manager = HeartBeatManager() 
 repeating_timer = RepeatingTimer(3.0, heartbeat_printer)
 repeating_timer.start()
-
