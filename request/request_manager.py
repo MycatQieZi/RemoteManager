@@ -22,10 +22,11 @@ class RequestManager():
     def get_version_check(self):
         version_info = self.config_manager.get_version_info()
         content = self.api_manager.get_version_check(version_info['versionNum'])
-
+        self.logger.debug("version check content: %s", content)
         upgrade_mark = content['upgradeMark']
-        upgrade_list = content['upgradeList']
-        self.logger.debug("upgrade mark: %s, upgrade list: %s", upgrade_mark,
+        if not upgrade_mark==0:
+            upgrade_list = content['upgradeList']
+            self.logger.debug("upgrade mark: %s, upgrade list: %s", upgrade_mark,
                           upgrade_list)
         return content
     
@@ -33,16 +34,18 @@ class RequestManager():
         return self.api_manager.get_file_download(version_code, local_filename, fn_set_progress)
 
     def post_heartbeat_info(self, heartbeat_info):
+        self.logger.debug('发送心跳包...')
         try:
             content = self.api_manager.post_heartbeat_info(heartbeat_info)
 
         except HttpRequestError as err:
-            self.logger.error("%s", err)
+            self.logger.error("发送心跳包失败, %s", err)
             return
         except ICBRequestError as err:
-            self.logger.error("%s", err)
+            self.logger.error("发送心跳包失败, %s", err)
             return
-        # TODO: handling stuffs
+
+        self.logger.debug('发送心跳包结果: %s', content)
         return content
 
     def post_logs_info(self, path, filename):

@@ -2,10 +2,10 @@ from settings.settings_manager import SettingsManager
 from misc.decorators import singleton
 from conf.config import ConfigManager
 from request.encryption import EncryptionManager
-from misc.exceptions import HttpRequestError, ICBRequestError, FileDownloadError
+from misc.exceptions import HttpRequestError, ICBRequestError, FileDownloadError, NoFileError
 from utils.my_logger import logger
 
-import requests, json, shutil, traceback
+import requests, json, shutil, traceback, datetime
 
 @singleton
 @logger
@@ -23,7 +23,7 @@ class APIManager():
         self.logger.debug("GET user token: %s", url)
         data = self.__http_get(url, params)
         if not data['code'] == 1:
-            raise ICBRequestError(data['msg'])
+            raise ICBRequestError(data)
         content = data['content']
         return content['token'], content['expireTime']
 
@@ -37,7 +37,7 @@ class APIManager():
         self.logger.debug("GET version check: %s", url)
         data = self.__http_get(url, params, headers)
         if not data['code'] == 1:
-            raise ICBRequestError(data['msg'])
+            raise ICBRequestError(data)
         return data['content']   
 
     def get_file_download(self, version_code, local_filename, fn_set_progress):
@@ -51,6 +51,8 @@ class APIManager():
         try:
             fname = self.__download_file(
                 url, params, headers=headers, fn_set_progress=fn_set_progress, local_filename=local_filename)
+        except NoFileError as nfe:
+            raise nfe 
         except Exception as e:
             self.error("File download failed...")
             raise FileDownloadError(traceback.print_exc()) 
@@ -62,11 +64,21 @@ class APIManager():
             # 'token': self.auth_manager.get_token(),
             'appkey': self.config_manager.get_keys()['appkey']
         }
-        url = self.__assemble_url("/heartbeat")
+        heartbeat_key_val_list = list(map(lambda tup: {'key': tup[0], 'value': tup[1]}, heartbeat_info.items()))
+        print(heartbeat_key_val_list)
+        data = {
+            "appkey": self.config_manager.get_keys()['appkey'],
+            "items": list(heartbeat_key_val_list),
+            "time": int(datetime.datetime.now().timestamp() * 1000),
+            "versionCode": self.config_manager.get_version_info()['versionCode']
+        }
+        self.logger.debug("心跳包请求体：%s", data)
+        url = self.__assemble_url("/heartBeat")
         # add some logging
-        data = self.__http_post(url, heartbeat_info, headers)
-        # TODO: response handling
-        return data
+        result = self.__http_post(url, data, headers)
+        if not result['code'] == 1:
+            raise ICBRequestError(result['msg'])
+        return result
     
     def post_logs_info(self, auth, logs_info):
         headers = auth
@@ -81,11 +93,12 @@ class APIManager():
 
     def __http_post(self, url, data, headers={}): # header is a dict
         headers["Content-type"] = "application/json;charset=UTF-8"
-        r = requests.post(url, data=data, headers=headers)
+        r = requests.post(url, json=data, headers=headers, timeout=3)
         if not r.status_code == 200:
-            raise HttpRequestError(r)
+            raise HttpRequestError(r, r.text)
         raw = r.text
-        decrypted = self.enc_manager.decrypt(raw)
+        # decrypted = self.enc_manager.decrypt(raw)
+        decrypted = raw
         try:
             parsed_dict = json.loads(decrypted)
         except json.decoder.JSONDecodeError:
@@ -97,7 +110,7 @@ class APIManager():
         headers["Content-type"] = data.content_type
         r = requests.post(url, data=data, headers=headers)
         if not r.status_code == 200:
-            raise HttpRequestError(r)
+            raise HttpRequestError(r, r.text)
         raw = r.text
         decrypted = self.enc_manager.decrypt(raw)
         try:
@@ -110,14 +123,15 @@ class APIManager():
     
 
     def __http_get(self, url, params, headers=""):
-        r = requests.get(url, params=params, headers=headers)
+        r = requests.get(url, params=params, headers=headers, timeout=3)
         if not r.status_code == 200:
-            raise HttpRequestError(r)
+            raise HttpRequestError(r, r.text)
         raw = r.text
         # decrypted = self.enc_manager.decrypt(raw)
         decrypted = raw
         try:
             parsed_dict = json.loads(decrypted)
+            parsed_dict['content'] = json.loads(parsed_dict['content'])
         except json.decoder.JSONDecodeError:
             raise
         else:
@@ -127,7 +141,10 @@ class APIManager():
         file_size_dl = 0
         chunk_sz = 8192
         with requests.get(url, params=params, headers=headers, stream=True) as r:
-            file_size = int(r.headers["Content-Length"])
+            try:
+                file_size = int(r.headers["Content-Length"])
+            except:
+                raise NoFileError
             with open(kwargs['local_filename'], 'wb') as f:
             #     shutil.copyfileobj(r.raw, f)
                 for chunk in r.iter_content(chunk_size=chunk_sz):

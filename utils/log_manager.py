@@ -14,7 +14,7 @@ LEVELS = { # all native logging lib levels in ascending order, higher = severer
     'crit': logging.CRITICAL
 }
 
-FORMAT_PATTERN = '[box_daemon, None, None, None] %(asctime)-15s.%(msecs)d [%(levelname)s] %(process)d '+\
+FORMAT_PATTERN = '[box_daemon,,,] %(asctime)-15s.%(msecs)d [%(levelname)s] %(process)d '+\
     '--- [%(threadName)s] %(module)s [%(lineno)d] : %(message)s'
 
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
@@ -41,7 +41,7 @@ class LoggerManager():
         formatter = logging.Formatter(FORMAT_PATTERN, TIME_FORMAT)
         
         if(to_file):
-            fileHandler = logging.FileHandler('logs/out.log')
+            fileHandler = logging.FileHandler('logs/out.log', encoding='utf-8')
             fileHandler.setLevel(level)
             fileHandler.setFormatter(formatter)
             self.logger.addHandler(fileHandler)

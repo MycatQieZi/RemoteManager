@@ -1,8 +1,7 @@
 from SMWinservice import SMWinservice
-from base_manager import BaseManager
-from module_manager import BoxUpdateModule
+from module_manager import BoxRemoteManager
 
-class RemoteManager(SMWinservice, BaseManager):
+class RemoteManager(SMWinservice):
 	_svc_name_ = "RemoteManagerService"
 	_svc_display_name_ = "Remote manager tool for callbox"
 	_svc_description_ = "designed by zxy, zy:)"
@@ -13,7 +12,7 @@ class RemoteManager(SMWinservice, BaseManager):
 
 	def start(self):
 		self.env = "dev"
-		self.module_manager = BoxUpdateModule(self.env)
+		self.module_manager = BoxRemoteManager(self.env)
 		self.isrunning = True
 	def stop(self):
 		self.isrunning = False

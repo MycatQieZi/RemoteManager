@@ -6,6 +6,7 @@ class PatchObject(object):
         self.version_num = version_data[VersionInfo.VNUM.value]
         self.file_MD5 = version_data[VersionInfo.MD5.value]
         self.remark = version_data[VersionInfo.REMARK.value]
+        self.argument_config_map = version_data[VersionInfo.CONFMAP.value]
         self.status = PatchStatus.PENDING
 
     def set_status(self, new_status):

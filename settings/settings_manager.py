@@ -37,6 +37,12 @@ class SettingsManager():
     def get_QTHZ_inst_path(self):
         return self.qthz_inst_path
 
+    def get_sqlite_db_path(self):
+        return self.qthz_inst_path+self.__config[SettingsCategories.PATHS.value]['data']
+
+    def get_backup_dir_path(self):
+        return self.qthz_inst_path+self.__config[SettingsCategories.PATHS.value]['backup']
+
     def get_patch_dir_path(self):
         return self.qthz_inst_path+self.__config[SettingsCategories.PATHS.value][SettingsItems.PATCH.value]
 
@@ -60,6 +66,11 @@ class SettingsManager():
         config = configparser.ConfigParser()
         config.read(path, encoding="UTF-8")
         return config
+    
+    def write_config_to_ini_file(self, config, filepath):
+        with open(filepath, 'w') as configfile:
+            config.write(configfile)
+        self.logger.debug("保存配置完成")
     
 
         

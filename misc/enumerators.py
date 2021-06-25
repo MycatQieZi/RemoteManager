@@ -1,4 +1,5 @@
 from enum import Enum
+from functools import total_ordering
 
 class Envs(Enum):
     LOCAL = 'local'
@@ -9,7 +10,7 @@ class Envs(Enum):
     PROD = 'prod'
 
 class FilePath(Enum):
-    CONFIG = "ini"
+    CONFIG = "config"
     FS = 'fs'
     JAVA = 'java'
     JAR = 'jar'
@@ -46,14 +47,21 @@ class VersionInfo(Enum):
     MD5 = 'fileMd5'
     REMARK = 'remark'
     STAT = 'status'
+    CONFMAP = 'argumentConfigMap'
 
+@total_ordering
 class PatchCyclePhase(Enum):
     READY = 0
     INCEPTION = 1
     DOWNLOAD = 2
     PENDING = 3
-    INSTALLATION = 4
-    ROLLBACK = 5
+    PREPPED = 4
+    COMPLETE = 5
+    ROLLEDBACK = 6
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
 
 class PatchStatus(Enum):
     PENDING = 0

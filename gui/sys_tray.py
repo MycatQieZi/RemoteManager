@@ -11,26 +11,45 @@ class SysTray():
         icon = QIcon(str(curr_script_path)+"/tool-box-64.ico")
         
         # Adding item on the menu bar
-        tray = QSystemTrayIcon()
-        tray.setIcon(icon)
-        tray.setVisible(True)
+        self.tray = QSystemTrayIcon()
+        self.tray.setToolTip("智能盒子运维管理")
+        self.tray.setIcon(icon)
+        self.tray.setVisible(True)
         
         # Creating the options
         menu = QMenu()
-        option1 = QAction("GET user Token")
-        option1.triggered.connect(fns['getUserToken'])
-        option2 = QAction("GET version check")
-        option2.triggered.connect(fns['getVersionCheck'])
-        menu.addAction(option1)
-        menu.addAction(option2)
+        self.update_menu = menu.addMenu("更新")
+        self.debug_menu = menu.addMenu("调试")
+        update_actions = [
+            {'title': '检查更新', 'fn': 'getVersionCheck'},
+            {'title': '清除缓存', 'fn': 'clearCache'},
+            {'title': '安装更新', 'fn': 'installUpdate'}
+        ]
+        for action in update_actions:
+            option = QAction(action['title'], self.app)
+            option.triggered.connect(fns[action['fn']])
+            self.update_menu.addAction(option)
+        
+        debug_actions = [
+            {'title': '获取口令', 'fn': 'getUserToken'},
+            {'title': '重载配置', 'fn': 'updateConfig'},
+            {'title': '心跳发送', 'fn': 'sendHeartbeat'}
+        ]
+        for action in debug_actions:
+            option = QAction(action['title'], self.app)
+            option.triggered.connect(fns[action['fn']])
+            self.debug_menu.addAction(option)
         
         # To quit the app
-        quit = QAction("Quit")
-        quit.triggered.connect(self.app.quit)
+        quit = QAction("退出")
+        quit.triggered.connect(lambda: fns['safeExit'](self.exit_gracefully))
         menu.addAction(quit)
         
         # Adding options to the System Tray
-        tray.setContextMenu(menu)
+        self.tray.setContextMenu(menu)
         self.app.exec_()
 
+    def exit_gracefully(self):
+        print("退出")
+        self.app.quit()
     

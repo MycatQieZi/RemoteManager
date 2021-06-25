@@ -18,7 +18,7 @@ CONFIG = {
         "logging": logging.DEBUG
     },
     Envs.UAT.value:{
-        "host_addr":"",
+        "host_addr":"http://www.tongtongcf.com:12001",
         "api_prefix": "/v1/api/center818/box",
         "logging": logging.DEBUG
     },
@@ -33,5 +33,16 @@ CONFIG = {
         "logging": logging.INFO
     }
 
+}
+
+REMOTE_CONF_MAPPING = {
+    "callboxPassword": ('FreeSWITCH', 'callboxPassword'),
+    "numconvertRealm": ('FreeSWITCH', 'numconvertRealm'),
+    "callboxRealm": ('FreeSWITCH', 'callboxRealm'),
+    "numconvertUsername": ('FreeSWITCH', 'numconvertUsername'),
+    "outnum": ('city', 'out'),
+    "citynum": ('city', 'num'),
+    "callboxUsername": ('FreeSWITCH', 'callboxUsername'),
+    "numconvertPassword": ('FreeSWITCH', 'numconvertPassword')
 }
 

@@ -25,3 +25,6 @@ class FileDownloadError(Exception):
 
     def __str__(self):
         return f'文件下载异常异常: {self.message}'
+
+class NoFileError(Exception):
+    pass
