@@ -21,7 +21,7 @@ class PatchManager:
         self.request_manager = RequestManager()
         self.check_update_lock = LockManager().version_check_lock
         self.meta_file_path = self.settings_manager.get_patch_meta_path()
-        self.path_dir_path = self.settings_manager.get_patch_dir_path()
+        self.patch_dir_path = self.settings_manager.get_patch_dir_path()
         
 
     def check_update(self):
@@ -37,6 +37,8 @@ class PatchManager:
                     status = self.check_for_update_phase()
                 elif self.state == PatchCyclePhase.INCEPTION:
                     status = self.file_download_phase()
+                elif self.state == PatchCyclePhase.COMPLETE:
+                    status = self.check_for_update_phase()
                 
                 if(status==0): # something went wrong
                     self.count_retry_once()
@@ -91,7 +93,7 @@ class PatchManager:
         if(patch_obj.status==PatchStatus.DOWNLOADED):
             return
         patch_obj.status = PatchStatus.DOWNLOADING
-        file_dir = f"{self.path_dir_path}\\{patch_obj.version_num}"
+        file_dir = f"{self.patch_dir_path}\\{patch_obj.version_num}"
         file_name = f"\\{patch_obj.version_code}.zip"
         full_path = file_dir + file_name
         Path(file_dir).mkdir(parents=True, exist_ok=True)
@@ -141,7 +143,7 @@ class PatchManager:
         #     self.logger.debug('Creating new meta file')
         #     file_flag = 'x'
         
-        Path(self.path_dir_path).mkdir(parents=True, exist_ok=True)
+        Path(self.patch_dir_path).mkdir(parents=True, exist_ok=True)
         with open(self.meta_file_path, 'w') as meta_file:
             meta_file.write(data_json_str)
             self.debug('Update state is saved in meta file')
@@ -167,10 +169,10 @@ class PatchManager:
             self.state = PatchCyclePhase.READY
             self.retry = 5
 
-    def check_dl_progress(self, progress):
-        if not progress == self.progress:
-            self.progress = progress
-            self.info(f"Download progress: {self.progress}%")
+    def check_dl_progress(self, currIndex, totalIndex):
+        progress = 100*currIndex/totalIndex
+        self.progress = progress
+        self.info("Download progress: %.0f percent, %s of %s completed..."%(progress, currIndex, totalIndex))
 
     def gen_md5(self, fname):
         hash_md5 = hashlib.md5()

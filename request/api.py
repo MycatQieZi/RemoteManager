@@ -49,7 +49,7 @@ class APIManager():
         url = self.__assemble_url("/version/file")
         self.logger.debug("GET version file: %s", url)
         try:
-            fname = self.__download_file(
+            fname = self.__download_in_chunks(
                 url, params, headers=headers, fn_set_progress=fn_set_progress, local_filename=local_filename)
         except NoFileError as nfe:
             raise nfe 
@@ -57,7 +57,7 @@ class APIManager():
             self.error("File download failed...")
             raise FileDownloadError(traceback.print_exc()) 
         
-        return fname 
+        return fname  
 
     def post_heartbeat_info(self, heartbeat_info):
         headers = {
@@ -137,7 +137,32 @@ class APIManager():
         else:
             return parsed_dict
 
-    def __download_file(self, url, params, headers='', **kwargs):
+    def __download_in_chunks(self, url, params, headers='', **kwargs):
+        currentIndex = 0
+        totalIndex = 10
+        with open(kwargs['local_filename'], 'wb') as f:
+            pass
+        while not currentIndex == totalIndex:
+            params['fileIndex'] = currentIndex
+            r = requests.get(url, params=params, headers=headers, timeout=3)
+            if not r.status_code == 200:
+                raise HttpRequestError(r, r.text)
+            raw = r.text
+            try:
+                parsed_dict = json.loads(raw)
+                content = parsed_dict['content']
+                totalIndex = content['totalIndex']
+            except json.decoder.JSONDecodeError:
+                raise
+            else:
+                with open(kwargs['local_filename'], 'ab') as f:
+                    f.write(b''.join([int_byte.to_bytes(1, 'big', signed=True) for int_byte in content['bytes']]))
+                currentIndex += 1
+                kwargs['fn_set_progress'](currentIndex, totalIndex)
+        return 1
+
+    # deprecated download as stream
+    def __download_file_stream_in_chunks(self, url, params, headers='', **kwargs):
         file_size_dl = 0
         chunk_sz = 8192
         with requests.get(url, params=params, headers=headers, stream=True) as r:

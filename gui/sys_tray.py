@@ -23,7 +23,8 @@ class SysTray():
         update_actions = [
             {'title': '检查更新', 'fn': 'getVersionCheck'},
             {'title': '清除缓存', 'fn': 'clearCache'},
-            {'title': '安装更新', 'fn': 'installUpdate'}
+            {'title': '安装更新', 'fn': 'installUpdate'},
+            {'title': '版本回退', 'fn': 'revertToLast'}
         ]
         for action in update_actions:
             option = QAction(action['title'], self.app)

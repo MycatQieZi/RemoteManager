@@ -48,7 +48,7 @@ class BoxRemoteManager:
         self.logger.debug("已启动自动心跳发送, timer:")
         self.timers.append(self.heartbeat_timer)
         
-        self.heartbeat_timer.start()
+        # self.heartbeat_timer.start()
         
     def exit_gracefully(self, fn_child_exit):
         for timer in self.timers:
@@ -69,6 +69,7 @@ class BoxRemoteManager:
             sendHeartbeat=self.heartbeat_manager.send_heartbeat,
             clearCache=self.install_manager.clear_download_cache,
             installUpdate=self.install_manager.install_update,
+            revertToLast=self.install_manager.revert_to_last,
             safeExit=self.exit_gracefully)
 
     def destroy(self):

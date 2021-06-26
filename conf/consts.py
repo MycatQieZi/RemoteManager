@@ -43,6 +43,8 @@ REMOTE_CONF_MAPPING = {
     "outnum": ('city', 'out'),
     "citynum": ('city', 'num'),
     "callboxUsername": ('FreeSWITCH', 'callboxUsername'),
-    "numconvertPassword": ('FreeSWITCH', 'numconvertPassword')
+    "numconvertPassword": ('FreeSWITCH', 'numconvertPassword'),
+    "hostAdr": ('host', 'adr'),
+    "dbfileName": ('dbfile', 'name')
 }
 
