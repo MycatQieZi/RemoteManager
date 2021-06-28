@@ -44,11 +44,22 @@ class BoxRemoteManager:
         self.heartbeat_manager = HeartBeatManager() 
 
     def init_timers(self):
-        self.heartbeat_timer = RepeatingTimer(300.0, self.heartbeat_manager.send_heartbeat)
-        self.logger.debug("已启动自动心跳发送, timer:")
+        heartbeat_interval = float(self.settings_manager.get_heartbeat_timer())
+        self.heartbeat_timer = RepeatingTimer(
+            heartbeat_interval, 
+            self.heartbeat_manager.send_heartbeat)
+        self.logger.debug("已启动自动心跳发送, timer interval: %.1f secs", heartbeat_interval)
         self.timers.append(self.heartbeat_timer)
+
+        version_check_interval = float(self.settings_manager.get_version_check_timer())
+        self.version_check_timer = RepeatingTimer(
+            version_check_interval, 
+            self.patch_manager.check_update)
+        self.logger.debug("已启动自动版本检查, timer interval: %.1f secs", version_check_interval)
+        self.timers.append(self.version_check_timer)
         
-        # self.heartbeat_timer.start()
+        self.heartbeat_timer.start()
+        self.version_check_timer.start()
         
     def exit_gracefully(self, fn_child_exit):
         for timer in self.timers:
@@ -78,8 +89,11 @@ class BoxRemoteManager:
             self.logger.debug("线程 %s 运行状态: %s", thread.name, thread.is_alive())
         sys.exit(1)
 
-if __name__ == '__main__':
+def entrypoint():
     LoggerManager()
     module_manager = BoxRemoteManager()
     module_manager.start_gui()
     module_manager.destroy()
+
+if __name__ == '__main__':
+    entrypoint()

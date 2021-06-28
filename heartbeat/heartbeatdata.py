@@ -1,7 +1,7 @@
 from scheduler.lock_manager import LockManager
 from request.request_manager import RequestManager
 from yamlmanager import GetYamlStruct
-from processcontroller.processstatus import getProcessStatus
+from processcontroller.processstatus import ProcessManager
 from processcontroller.systeminfo import getSystemInfo
 from conf.config import ConfigManager
 from utils.my_logger import logger
@@ -25,9 +25,9 @@ class HeartBeatManager():
         access_id = auto_info['accessId']
         access_secret = auto_info['accessKeySecret']
 
-        process_status = getProcessStatus()
+        process_status = ProcessManager()
         freeswitch_status = process_status.isFreeSwitchRunning()
-        java_status = process_status.isJavaRunning()
+        java_status = 1 if process_status.isJavaRunning() else 0
         reg_info = process_status.freeswitchStatus()
 
         system_info = getSystemInfo()

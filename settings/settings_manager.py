@@ -18,6 +18,8 @@ class SettingsManager():
         return {
             FilePath.CONFIG: self.qthz_inst_path+self.__config[SettingsCategories.PATHS.value][SettingsItems.CONFIG.value],
             FilePath.FS: self.__config[SettingsCategories.PATHS.value][SettingsItems.FS.value],
+            FilePath.FS_CONF: self.__config[SettingsCategories.PATHS.value][SettingsItems.FS.value]
+                +self.__config[SettingsCategories.PATHS.value][SettingsItems.FS_CONF.value],
             FilePath.JAVA: self.__config[SettingsCategories.PATHS.value][SettingsItems.JAVA.value],
             FilePath.JAR: self.__config[SettingsCategories.PATHS.value][SettingsItems.JAR.value]
         }
@@ -48,6 +50,13 @@ class SettingsManager():
 
     def get_patch_meta_path(self):
         return self.get_patch_dir_path()+self.__config[SettingsCategories.PATHS.value][SettingsItems.PATCHMETA.value]
+
+    def get_heartbeat_timer(self):
+        return self.__config[SettingsCategories.TIMER.value]['heartbeat']
+
+    def get_version_check_timer(self):
+        return self.__config[SettingsCategories.TIMER.value]['versionCheck']
+
 
     def read_QTHZ_inst_path(self):
         self.qthz_inst_path = reg_get_QTHZ_path()

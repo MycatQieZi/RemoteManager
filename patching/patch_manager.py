@@ -1,13 +1,13 @@
 import logging
 from scheduler.lock_manager import LockManager
 from settings.settings_manager import SettingsManager
-from misc.decorators import singleton, with_lock
+from misc.decorators import singleton, with_countdown, with_lock
 from conf.config import ConfigManager
 from request.request_manager import RequestManager
 from patching.patch_obj import PatchObject
 from utils.my_logger import logger
 from misc.enumerators import PatchStatus, UpgradeMark, PatchCyclePhase
-from misc.exceptions import FileDownloadError, NoFileError
+from misc.exceptions import FileDownloadError, ICBRequestError, NoFileError
 from pathlib import Path
 import os, jsonpickle, shutil, hashlib, traceback, zipfile
 
@@ -36,7 +36,7 @@ class PatchManager:
                 if self.state == PatchCyclePhase.READY:
                     status = self.check_for_update_phase()
                 elif self.state == PatchCyclePhase.INCEPTION:
-                    status = self.file_download_phase()
+                    status = self.file_download_phase(timed=True, max_wait=3, randomly=True)
                 elif self.state == PatchCyclePhase.COMPLETE:
                     status = self.check_for_update_phase()
                 
@@ -53,7 +53,6 @@ class PatchManager:
             result = 0
         finally:
             self.logger.debug("检查更新流程: %s", '完成' if result else '异常') 
-        
 
     def check_for_update_phase(self):
         try:
@@ -71,8 +70,9 @@ class PatchManager:
 
         self.patch_objs = list(map(PatchObject, upgrade_list))
         self.state = PatchCyclePhase.INCEPTION
-        return self.file_download_phase()
+        return self.file_download_phase(timed=True, max_wait=3, randomly=True)
 
+    @with_countdown
     def file_download_phase(self):
         # self.logger.debug("content: %s", content)
         self.state = PatchCyclePhase.DOWNLOAD
@@ -81,6 +81,7 @@ class PatchManager:
             try:
                 for index, patch_obj in enumerate(self.patch_objs):
                     self.download_one(self.patch_objs[index])
+
             except FileDownloadError as err:
                 self.logger.error("下载失败! 原因: %s", err)
                 self.state = PatchCyclePhase.INCEPTION
@@ -130,7 +131,6 @@ class PatchManager:
     def check_exists(self, dir_or_file):
         return os.path.exists(dir_or_file)
 
-
     def dump_meta(self):
         meta_data = {
             'state': self.state,
@@ -161,7 +161,10 @@ class PatchManager:
         self.patch_objs = meta_data['list']
         self.retry = meta_data['retries']
         self.upgrade_mark = meta_data['mark']
-        self.debug('Loaded state from meta file')
+        self.logger.debug('Loaded state from meta file')
+        self.logger.debug('Current Patch Phase: %s', self.state.name)
+        [self.logger.debug(f'Version {patch_obj.version_num}: {patch_obj.status.name}') 
+            for patch_obj in self.patch_objs]
 
     def count_retry_once(self):
         self.retry -= 1

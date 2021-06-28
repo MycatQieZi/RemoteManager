@@ -1,3 +1,4 @@
+from processcontroller.processstatus import ProcessManager
 from conf.config import ConfigManager
 from scheduler.lock_manager import LockManager
 from misc.enumerators import FilePath, PatchCyclePhase, PatchStatus
@@ -8,7 +9,7 @@ from utils.my_logger import logger
 from pathlib import Path
 from os import listdir
 from os.path import isfile, join, exists
-import shutil, traceback, time, sqlite3
+import shutil, traceback, time, sqlite3, threading
 
 @singleton
 @logger
@@ -18,6 +19,7 @@ class InstallManager:
         self.patch_manager = PatchManager()
         self.lock_manager = LockManager()
         self.config_manager = ConfigManager()
+        self.process_manager = ProcessManager()
         self.install_update_lock = self.lock_manager.install_update_lock 
         self.heartbeat_lock = self.lock_manager.heartbeat_lock
     
@@ -63,12 +65,16 @@ class InstallManager:
         if self.patch_manager.state == PatchCyclePhase.PREPPED:
             result = self.replace_files()
         if self.patch_manager.state == PatchCyclePhase.COMPLETE:
-            self.logger.debug("完事儿了")
             result = self.post_installation_cleanup()
         if self.patch_manager.state == PatchCyclePhase.ROLLEDBACK:
-            # TODO: maybe clean up download?
-            pass
-
+            # TODO: do something to mitigate the aftermath
+            self.patch_manager.state = PatchCyclePhase.PENDING
+            for index, _ in enumerate(self.patch_manager.patch_objs):
+                patch_obj = self.patch_manager.patch_objs[index]
+                patch_obj.status = PatchStatus.DOWNLOADED
+            self.patch_manager.dump_meta()
+            self.logger.info("可尝试再次安装")
+        self.resume_all_operations()
         return result
 
     def create_backup(self):
@@ -224,23 +230,35 @@ class InstallManager:
         self.logger.debug("数据更新完成")
 
     def post_installation_cleanup(self):
-        #self.patch_manager.state = PatchCyclePhase.READY
+        self.patch_manager.state = PatchCyclePhase.READY
         self.patch_manager.dump_meta()
-        self.logger.info("安装更新完成!")
         self.config_manager.load_config()
+        self.config_manager.save_fs_conf()
+        self.logger.info("安装更新完成!")
         return 1
 
     def pause_all_operations(self):
-        self.logger.info("ALL STATION, ALL STATION, halt all operations immediately! Triggering killswitch in...")
-        countdown = 3
-        for i in range(countdown, 0, -1):
-            self.logger.info(i)
-            time.sleep(1)
+        self.logger.debug("Halting all operations, triggering killswitch in...")
+        # fs_stopper_thread = threading.Thread(target=self.process_manager.stopFreeswitch)
+        # fs_stopper_thread.start() 
+        # java_stopper_thread = threading.Thread(target=self.process_manager.stop_java)
+        # java_stopper_thread.start()
+        self.process_manager.stopFreeswitch()
+        self.process_manager.stop_java()
+        # countdown = 3
+        # for i in range(countdown, 0, -1):
+        #     self.logger.debug(i)
+        #     time.sleep(1)
+        # fs_stopper_thread.join()
+        # java_stopper_thread.join()
         
 
     def resume_all_operations(self):
+        self.logger.info("Resuming operations immediately!")
+        starter_thread =  threading.Thread(target=self.process_manager.start_QTHZ)
+        starter_thread.start()
         self.config_manager.load_config()
-        self.logger.info("ALL STATION, ALL STATION, resume operations immediately!")
+        starter_thread.join()
 
     
 

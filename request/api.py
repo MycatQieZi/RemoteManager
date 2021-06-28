@@ -53,6 +53,11 @@ class APIManager():
                 url, params, headers=headers, fn_set_progress=fn_set_progress, local_filename=local_filename)
         except NoFileError as nfe:
             raise nfe 
+        
+        except ICBRequestError as icbe:
+            self.logger.error("下载失败! 原因: %s", icbe.message)
+            raise FileDownloadError(icbe.message) 
+        
         except Exception as e:
             self.error("File download failed...")
             raise FileDownloadError(traceback.print_exc()) 
@@ -131,6 +136,8 @@ class APIManager():
         decrypted = raw
         try:
             parsed_dict = json.loads(decrypted)
+            if not parsed_dict['code'] == 1:
+                raise ICBRequestError(parsed_dict['msg'])
             parsed_dict['content'] = json.loads(parsed_dict['content'])
         except json.decoder.JSONDecodeError:
             raise
@@ -150,10 +157,13 @@ class APIManager():
             raw = r.text
             try:
                 parsed_dict = json.loads(raw)
+                if not parsed_dict['code'] == 1:
+                    raise ICBRequestError(parsed_dict['msg'])
                 content = parsed_dict['content']
                 totalIndex = content['totalIndex']
             except json.decoder.JSONDecodeError:
                 raise
+
             else:
                 with open(kwargs['local_filename'], 'ab') as f:
                     f.write(b''.join([int_byte.to_bytes(1, 'big', signed=True) for int_byte in content['bytes']]))

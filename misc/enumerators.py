@@ -12,6 +12,7 @@ class Envs(Enum):
 class FilePath(Enum):
     CONFIG = "config"
     FS = 'fs'
+    FS_CONF = 'fs_conf'
     JAVA = 'java'
     JAR = 'jar'
 
@@ -30,6 +31,7 @@ class SettingsItems(Enum):
     PATCH = 'patch'
     PATCHMETA = 'patchmeta'
     FS = 'fs'
+    FS_CONF = 'fs_conf'
     JAVA = 'java'
     JAR = 'jar'
 
