@@ -41,6 +41,7 @@ class GUIManager():
             clearCache=lambda: self.onClickClearCache(fns['clearCache']),
             installUpdate=lambda: self.onClickInstall(fns['installUpdate']),
             revertToLast=fns['revertToLast'],
+            startQTHZ=fns['startQTHZ'],
             safeExit=self.onClickSafeExit
             )
         

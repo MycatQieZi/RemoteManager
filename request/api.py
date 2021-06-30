@@ -98,7 +98,7 @@ class APIManager():
 
     def __http_post(self, url, data, headers={}): # header is a dict
         headers["Content-type"] = "application/json;charset=UTF-8"
-        r = requests.post(url, json=data, headers=headers, timeout=3)
+        r = requests.post(url, json=data, headers=headers, timeout=60)
         if not r.status_code == 200:
             raise HttpRequestError(r, r.text)
         raw = r.text
@@ -128,7 +128,7 @@ class APIManager():
     
 
     def __http_get(self, url, params, headers=""):
-        r = requests.get(url, params=params, headers=headers, timeout=3)
+        r = requests.get(url, params=params, headers=headers, timeout=60)
         if not r.status_code == 200:
             raise HttpRequestError(r, r.text)
         raw = r.text
@@ -151,7 +151,7 @@ class APIManager():
             pass
         while not currentIndex == totalIndex:
             params['fileIndex'] = currentIndex
-            r = requests.get(url, params=params, headers=headers, timeout=3)
+            r = requests.get(url, params=params, headers=headers, timeout=60)
             if not r.status_code == 200:
                 raise HttpRequestError(r, r.text)
             raw = r.text

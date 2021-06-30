@@ -39,6 +39,10 @@ class SysTray():
             option.triggered.connect(fns[action['fn']])
             self.debug_menu.addAction(option)
         
+        start_qthz_action = QAction("启动精灵")
+        start_qthz_action.triggered.connect(fns['startQTHZ'])
+        menu.addAction(start_qthz_action)
+
         # To quit the app
         quit = QAction("退出")
         quit.triggered.connect(lambda: fns['safeExit'](self.exit_gracefully))

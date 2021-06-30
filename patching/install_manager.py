@@ -9,6 +9,7 @@ from utils.my_logger import logger
 from pathlib import Path
 from os import listdir
 from os.path import isfile, join, exists
+from gui.winrt_toaster import toast_notification
 import shutil, traceback, time, sqlite3, threading
 
 @singleton
@@ -57,6 +58,10 @@ class InstallManager:
             self.logger.error(traceback.format_exc())
             result = 0
         finally:
+            if(result):
+                if(len(self.patch_manager.patch_objs)>0):
+                    remark = self.patch_manager.patch_objs[-1].remark
+                toast_notification("证通智能精灵", "软件更新", f"软件更新已经完成! {remark if remark else ''}")
             self.logger.debug("安装流程: %s", '完成' if result else '异常') 
         
     def installation(self):

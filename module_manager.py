@@ -1,3 +1,4 @@
+from processcontroller.processstatus import ProcessManager
 from patching.install_manager import InstallManager
 from patching.patch_manager import PatchManager
 from utils.log_manager import LoggerManager
@@ -7,6 +8,7 @@ from request.request_manager import RequestManager
 from request.api import APIManager
 from request.auth_manager import AuthenticationManager
 from gui.gui_manager import GUIManager
+from gui.winrt_toaster import toast_notification
 from heartbeat.heartbeatdata import HeartBeatManager
 from scheduler.repeating_timer import RepeatingTimer
 from scheduler.lock_manager import LockManager
@@ -42,6 +44,7 @@ class BoxRemoteManager:
         self.patch_manager = PatchManager()
         self.install_manager = InstallManager()
         self.heartbeat_manager = HeartBeatManager() 
+        self.process_manager = ProcessManager()
 
     def init_timers(self):
         heartbeat_interval = float(self.settings_manager.get_heartbeat_timer())
@@ -73,6 +76,7 @@ class BoxRemoteManager:
 
     def start_gui(self):
         self.info('Starting GUI...')
+        toast_notification("证通智能精灵", "启动成功", "智能精灵助手已经启动, 并且在系统托盘后台运行")
         self.gui_manager = GUIManager(
             getUserToken=self.auth_manager.acquire_new_token,
             getVersionCheck=self.patch_manager.check_update,
@@ -81,12 +85,14 @@ class BoxRemoteManager:
             clearCache=self.install_manager.clear_download_cache,
             installUpdate=self.install_manager.install_update,
             revertToLast=self.install_manager.revert_to_last,
+            startQTHZ=self.process_manager.start_QTHZ,
             safeExit=self.exit_gracefully)
-
+        
     def destroy(self):
         threads = threading.enumerate()
         for thread in threads:
             self.logger.debug("线程 %s 运行状态: %s", thread.name, thread.is_alive())
+        toast_notification("证通智能精灵", "成功退出", "智能精灵助手已经停止")
         sys.exit(1)
 
 def entrypoint():
@@ -94,6 +100,7 @@ def entrypoint():
     module_manager = BoxRemoteManager()
     module_manager.start_gui()
     module_manager.destroy()
+    
 
 if __name__ == '__main__':
     entrypoint()

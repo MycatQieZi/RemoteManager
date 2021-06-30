@@ -9,6 +9,7 @@ from utils.my_logger import logger
 from misc.enumerators import PatchStatus, UpgradeMark, PatchCyclePhase
 from misc.exceptions import FileDownloadError, ICBRequestError, NoFileError
 from pathlib import Path
+from gui.winrt_toaster import toast_notification
 import os, jsonpickle, shutil, hashlib, traceback, zipfile
 
 @singleton
@@ -52,6 +53,8 @@ class PatchManager:
             self.logger.error(traceback.format_exc())
             result = 0
         finally:
+            if(result):
+                toast_notification("证通智能精灵", "下载完成", "新的软件更新已经准备完毕, 请您及时更新!")
             self.logger.debug("检查更新流程: %s", '完成' if result else '异常') 
 
     def check_for_update_phase(self):
@@ -77,6 +80,7 @@ class PatchManager:
         # self.logger.debug("content: %s", content)
         self.state = PatchCyclePhase.DOWNLOAD
         if(UpgradeMark(self.upgrade_mark)==UpgradeMark.MANDATORY):
+            toast_notification("证通智能精灵", "软件更新", "发现可用的软件更新, 正在下载更新")
             self.debug("Mandatory update")
             try:
                 for index, patch_obj in enumerate(self.patch_objs):
