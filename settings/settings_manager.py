@@ -1,4 +1,4 @@
-import configparser, os, logging
+import configparser, os, logging, yaml
 from conf.reg import reg_get_QTHZ_path
 from misc.enumerators import FilePath, SettingsCategories, SettingsItems
 from settings.consts import DEFAULT_FILE_TEMPLATE
@@ -21,7 +21,10 @@ class SettingsManager():
             FilePath.FS_CONF: self.__config[SettingsCategories.PATHS.value][SettingsItems.FS.value]
                 +self.__config[SettingsCategories.PATHS.value][SettingsItems.FS_CONF.value],
             FilePath.JAVA: self.__config[SettingsCategories.PATHS.value][SettingsItems.JAVA.value],
-            FilePath.JAR: self.__config[SettingsCategories.PATHS.value][SettingsItems.JAR.value]
+            FilePath.JAR: self.qthz_inst_path+self.__config[SettingsCategories.PATHS.value][SettingsItems.JAR.value],
+            FilePath.JAVA_PID: self.qthz_inst_path+self.__config[SettingsCategories.PATHS.value][SettingsItems.JAVA_PID.value],
+            FilePath.APP_YML: self.qthz_inst_path+self.__config[SettingsCategories.PATHS.value][SettingsItems.APP_YML.value],
+            FilePath.PATH_BAT: self.qthz_inst_path+self.__config[SettingsCategories.PATHS.value][SettingsItems.PATH_BAT.value]
         }
 
     def get_heartbeat_timer(self):
@@ -80,6 +83,15 @@ class SettingsManager():
         with open(filepath, 'w') as configfile:
             config.write(configfile)
         self.logger.debug("保存配置完成")
+
+    def get_yaml_info(self, filepath):
+        with open(filepath, mode = 'r', encoding='utf-8') as stream:
+            data = yaml.safe_load(stream)
+            return data 
+
+    def write_yaml_info(self, filepath, data):
+        with open(filepath, mode = 'w', encoding='utf-8') as stream:
+            yaml.dump(data, stream, allow_unicode = True)
     
 
         

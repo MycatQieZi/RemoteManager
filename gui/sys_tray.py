@@ -7,22 +7,22 @@ class SysTray():
         self.app = app
         curr_script_path = pathlib.Path(__file__).parent.absolute()
         # Adding an icon
-        icon = QIcon(".\\resources\\tool-box-64.ico")
+        icon = QIcon(".\\resources\\fast.ico")
         # Adding item on the menu bar
         self.tray = QSystemTrayIcon()
-        self.tray.setToolTip("智能盒子运维管理")
+        self.tray.setToolTip("智能精灵运维管理")
         self.tray.setIcon(icon)
         self.tray.setVisible(True)
         
         # Creating the options
         menu = QMenu()
         self.update_menu = menu.addMenu("更新")
-        self.debug_menu = menu.addMenu("调试")
+        # self.debug_menu = menu.addMenu("调试")
         update_actions = [
-            {'title': '检查更新', 'fn': 'getVersionCheck'},
+            # {'title': '检查更新', 'fn': 'getVersionCheck'},
             {'title': '安装更新', 'fn': 'installUpdate'},
-            {'title': '清除缓存', 'fn': 'clearCache'},
-            {'title': '版本回退', 'fn': 'revertToLast'}
+            {'title': '清除缓存', 'fn': 'clearCache'}
+            # {'title': '版本回退', 'fn': 'revertToLast'}
         ]
         for action in update_actions:
             option = QAction(action['title'], self.app)
@@ -31,13 +31,13 @@ class SysTray():
         
         debug_actions = [
             # {'title': '获取口令', 'fn': 'getUserToken'},
-            {'title': '重载配置', 'fn': 'updateConfig'},
-            {'title': '心跳发送', 'fn': 'sendHeartbeat'}
+            # {'title': '重载配置', 'fn': 'updateConfig'},
+            # {'title': '心跳发送', 'fn': 'sendHeartbeat'}
         ]
-        for action in debug_actions:
-            option = QAction(action['title'], self.app)
-            option.triggered.connect(fns[action['fn']])
-            self.debug_menu.addAction(option)
+        # for action in debug_actions:
+        #     option = QAction(action['title'], self.app)
+        #     option.triggered.connect(fns[action['fn']])
+        #     self.debug_menu.addAction(option)
         
         start_qthz_action = QAction("启动精灵")
         start_qthz_action.triggered.connect(fns['startQTHZ'])

@@ -15,6 +15,9 @@ class FilePath(Enum):
     FS_CONF = 'fs_conf'
     JAVA = 'java'
     JAR = 'jar'
+    JAVA_PID = 'java_pid'
+    PATH_BAT = 'path_bat'
+    APP_YML = "app_yml"
 
 class SettingsCategories(Enum):
     GENERAL = 'general'
@@ -33,7 +36,10 @@ class SettingsItems(Enum):
     FS = 'fs'
     FS_CONF = 'fs_conf'
     JAVA = 'java'
+    JAVA_PID = 'java_pid'
     JAR = 'jar'
+    PATH_BAT = 'path_bat'
+    APP_YML = 'app_yml'
 
     # timer
     HB = 'heartbeat'

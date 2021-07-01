@@ -31,8 +31,10 @@ class InstallManager:
             shutil.rmtree(patch_dir)
         except:
             self.logger.debug("清除失败")
+            toast_notification("证通智能精灵", "清除缓存", "本地下载缓存清除过程遇到问题, 请您稍后再试")
         else:
             self.logger.info("清除完毕")
+            toast_notification("证通智能精灵", "清除缓存", "本地下载缓存已经清除")
 
     def install_update(self):
         @with_lock(self.install_update_lock, logger=self.logger)
@@ -43,10 +45,12 @@ class InstallManager:
             try: 
                 if(self.patch_manager.state < PatchCyclePhase.PENDING 
                     or self.patch_manager.state > PatchCyclePhase.PREPPED):
+                    toast_notification("证通智能精灵", "软件更新", "暂时没有需要安装的更新噢!")
                     self.logger.info("暂无需要安装的更新")
                     return 1
                 self.pause_all_operations()
                 self.logger.info("开始安装更新")
+                toast_notification("证通智能精灵", "软件更新", "开始安装软件更新...")
                 result = self.installation()
             except Exception:
                 return 0
@@ -60,8 +64,11 @@ class InstallManager:
         finally:
             if(result):
                 if(len(self.patch_manager.patch_objs)>0):
-                    remark = self.patch_manager.patch_objs[-1].remark
-                toast_notification("证通智能精灵", "软件更新", f"软件更新已经完成! {remark if remark else ''}")
+                    patch_obj = self.patch_manager.patch_objs[-1]
+                    remark = patch_obj.remark
+                    version = patch_obj.version_num
+                self.logger.info(f"{'当前最新版本: '+version if version else ''} {'更新内容: '+remark if remark else ''}")
+                toast_notification("证通智能精灵", "更新成功", f"{'当前最新版本: '+version if version else ''} {'更新内容: '+remark if remark else ''}")
             self.logger.debug("安装流程: %s", '完成' if result else '异常') 
         
     def installation(self):
@@ -110,6 +117,7 @@ class InstallManager:
             self.logger.debug("记录回滚版本: %s", patch_obj.version_num)
         self.revert_to_last()
         self.patch_manager.dump_meta()
+        toast_notification("证通智能精灵", "更新失败", "非常抱歉, 更新过程中遇到问题, 已经为您退回到之前的版本, 请您联系证通的技术人员")
         self.logger.info("回滚完成")
 
     def revert_to_last(self):
@@ -248,7 +256,7 @@ class InstallManager:
         # fs_stopper_thread.start() 
         # java_stopper_thread = threading.Thread(target=self.process_manager.stop_java)
         # java_stopper_thread.start()
-        self.process_manager.stopFreeswitch()
+        self.process_manager.stop_freeswitch()
         self.process_manager.stop_java()
         # countdown = 3
         # for i in range(countdown, 0, -1):

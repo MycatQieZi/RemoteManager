@@ -53,8 +53,6 @@ class PatchManager:
             self.logger.error(traceback.format_exc())
             result = 0
         finally:
-            if(result):
-                toast_notification("证通智能精灵", "下载完成", "新的软件更新已经准备完毕, 请您及时更新!")
             self.logger.debug("检查更新流程: %s", '完成' if result else '异常') 
 
     def check_for_update_phase(self):
@@ -91,6 +89,7 @@ class PatchManager:
                 self.state = PatchCyclePhase.INCEPTION
                 return 0
             self.debug("Download finished.")
+            toast_notification("证通智能精灵", "下载完成", "新的软件更新已经准备完毕, 请您及时更新!")
             self.state = PatchCyclePhase.PENDING
         return 1  
 

@@ -85,7 +85,7 @@ class BoxRemoteManager:
             clearCache=self.install_manager.clear_download_cache,
             installUpdate=self.install_manager.install_update,
             revertToLast=self.install_manager.revert_to_last,
-            startQTHZ=self.process_manager.start_QTHZ,
+            startQTHZ=self.process_manager.open_qthz,
             safeExit=self.exit_gracefully)
         
     def destroy(self):

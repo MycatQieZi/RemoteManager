@@ -15,6 +15,7 @@ class HeartBeatManager():
         self.config_manager = ConfigManager()
         self.request_manager = RequestManager()
         self.lock_manager = LockManager()
+        self.proc_manager = ProcessManager()
         self.config_manager.load_config()
 
     def fill_heartbeat_struct(self):
@@ -26,9 +27,9 @@ class HeartBeatManager():
         access_secret = auto_info['accessKeySecret']
 
         process_status = ProcessManager()
-        freeswitch_status = process_status.isFreeSwitchRunning()
-        java_status = 1 if process_status.isJavaRunning() else 0
-        reg_info = process_status.freeswitchStatus()
+        freeswitch_status = process_status.is_freeswitch_running()
+        java_status = 1 if process_status.is_java_running() else 0
+        reg_info = process_status.freeswitch_status()
 
         system_info = getSystemInfo()
         cpu_rate_info = system_info.cpu_rate()
@@ -54,8 +55,11 @@ class HeartBeatManager():
     
     def send_heartbeat(self):
         @with_lock(self.lock_manager.heartbeat_lock, logger=self.logger)
+        @with_lock(self.lock_manager.install_update_lock, blocking=True, logger=self.logger)
         def send():
             self.logger.debug("发送心跳")
+            self.proc_manager.keep_fs_alive()
+            self.proc_manager.keep_java_alive()
             hb_info = self.fill_heartbeat_struct()
             try:
                 self.request_manager.post_heartbeat_info(hb_info)
