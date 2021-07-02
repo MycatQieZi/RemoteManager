@@ -77,6 +77,7 @@ class BoxRemoteManager:
     def start_gui(self):
         self.info('Starting GUI...')
         toast_notification("证通智能精灵", "启动成功", "智能精灵助手已经启动, 并且在系统托盘后台运行")
+        
         self.gui_manager = GUIManager(
             getUserToken=self.auth_manager.acquire_new_token,
             getVersionCheck=self.patch_manager.check_update,

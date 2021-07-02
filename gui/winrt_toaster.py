@@ -10,3 +10,6 @@ def toast_notification(AppID, title, text):
         notifier.show(ToastNotification(XML))
     except:
         print("Notification Center Not Available")
+
+# def toast_notification(AppID, title, text):
+#     pass

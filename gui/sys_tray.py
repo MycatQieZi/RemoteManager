@@ -1,19 +1,22 @@
+from utils.my_logger import logger
 from PyQt5.QtGui import * 
 from PyQt5.QtWidgets import * 
 import pathlib
 
+@logger
 class SysTray():
     def __init__(self, app, **fns):
         self.app = app
         curr_script_path = pathlib.Path(__file__).parent.absolute()
         # Adding an icon
-        icon = QIcon(".\\resources\\fast.ico")
+        icon = QIcon(".\\gui\\resources\\fast.ico")
         # Adding item on the menu bar
         self.tray = QSystemTrayIcon()
         self.tray.setToolTip("智能精灵运维管理")
         self.tray.setIcon(icon)
         self.tray.setVisible(True)
         
+        self.logger.info("加载系统托盘菜单")
         # Creating the options
         menu = QMenu()
         self.update_menu = menu.addMenu("更新")
