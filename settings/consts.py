@@ -3,6 +3,7 @@ DEFAULT_FILE_TEMPLATE = \
 [general]
 env=prod
 logging=info
+log_expiration=30
 
 [paths]
 config=\conf\configuration.ini

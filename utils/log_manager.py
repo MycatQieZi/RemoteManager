@@ -1,4 +1,4 @@
-import logging, sys
+import logging, sys, logging.handlers
 from conf.consts import CONFIG
 from misc.enumerators import Envs
 from misc.decorators import singleton
@@ -28,6 +28,7 @@ class LoggerManager():
         self.settings_manager = SettingsManager()
         self.get_env = self.settings_manager.get_env
         logging_level = self.settings_manager.get_logging_level().lower()
+        self.log_expiration_days = int(self.settings_manager.get_log_expiration())
         
         
         self.init_logger(self.switch_logging_level(logging_level), self.ignore_file_output(self.get_env()))
@@ -41,7 +42,7 @@ class LoggerManager():
         formatter = logging.Formatter(FORMAT_PATTERN, TIME_FORMAT)
         
         if(to_file):
-            fileHandler = logging.FileHandler('logs/out.log', encoding='utf-8')
+            fileHandler = logging.handlers.TimedRotatingFileHandler('logs/out.log', when='d', interval=1, backupCount=self.log_expiration_days, encoding='utf-8')
             fileHandler.setLevel(level)
             fileHandler.setFormatter(formatter)
             self.logger.addHandler(fileHandler)

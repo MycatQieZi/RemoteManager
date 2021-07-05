@@ -28,6 +28,7 @@ class SettingsItems(Enum):
     # general
     ENV = 'env'
     LOGGING = 'logging'
+    LOG_EXP = 'log_expiration'
 
     # paths
     CONFIG = 'config'

@@ -23,7 +23,8 @@ class BoxRemoteManager:
         self.logger.info('BoxHelper Update Module is initializing...')
         self.init_managers()
         self.timers = []
-        self.init_timers()
+        if len(sys.argv)<2 or not sys.argv[1]=='debug':
+            self.init_timers()
 
 
     def init_config(self):

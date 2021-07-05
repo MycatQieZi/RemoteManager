@@ -62,13 +62,6 @@ class InstallManager:
             self.logger.error(traceback.format_exc())
             result = 0
         finally:
-            if(result):
-                if(len(self.patch_manager.patch_objs)>0):
-                    patch_obj = self.patch_manager.patch_objs[-1]
-                    remark = patch_obj.remark
-                    version = patch_obj.version_num
-                self.logger.info(f"{'当前最新版本: '+version if version else ''} {'更新内容: '+remark if remark else ''}")
-                toast_notification("证通智能精灵", "更新成功", f"{'当前最新版本: '+version if version else ''} {'更新内容: '+remark if remark else ''}")
             self.logger.debug("安装流程: %s", '完成' if result else '异常') 
         
     def installation(self):
@@ -156,6 +149,12 @@ class InstallManager:
         self.patch_manager.state = PatchCyclePhase.COMPLETE
         self.patch_manager.dump_meta()
         self.logger.info("遍历安装完成")
+        if(len(self.patch_manager.patch_objs)>0):
+            patch_obj = self.patch_manager.patch_objs[-1]
+            remark = patch_obj.remark
+            version = patch_obj.version_num
+            self.logger.info(f"{'当前最新版本: '+version if version else ''} {'更新内容: '+remark if remark else ''}")
+            toast_notification("证通智能精灵", "更新成功", f"{'当前最新版本: '+version if version else ''} {'更新内容: '+remark if remark else ''}")
         return 1
 
     def replace_one_version(self, patch_obj):

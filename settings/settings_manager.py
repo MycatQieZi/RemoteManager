@@ -39,6 +39,9 @@ class SettingsManager():
     def get_logging_level(self):
         return self.__config[SettingsCategories.GENERAL.value][SettingsItems.LOGGING.value]
 
+    def get_log_expiration(self):
+        return self.__config[SettingsCategories.GENERAL.value][SettingsItems.LOG_EXP.value]
+
     def get_QTHZ_inst_path(self):
         return self.qthz_inst_path
 
