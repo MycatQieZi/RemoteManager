@@ -1,4 +1,4 @@
-import configparser, os, logging, yaml
+import configparser, os, logging, yaml, sys
 from conf.reg import reg_get_QTHZ_path
 from misc.enumerators import FilePath, SettingsCategories, SettingsItems
 from settings.consts import DEFAULT_FILE_TEMPLATE
@@ -9,6 +9,10 @@ class SettingsManager():
     def __init__(self):
         self.logger = logging.getLogger("box_helper_common_logger")
         self.logger.info("Starting the settings manager...")
+        if len(sys.argv)<2 or not sys.argv[1]=='debug':
+            self.dev_mode = False
+        else:
+            self.dev_mode = True
         self.__settings_path = "./settings/settings.ini"
         self.read_settings(self.__settings_path)
         self.read_QTHZ_inst_path()
@@ -26,6 +30,16 @@ class SettingsManager():
             FilePath.APP_YML: self.qthz_inst_path+self.__config[SettingsCategories.PATHS.value][SettingsItems.APP_YML.value],
             FilePath.PATH_BAT: self.qthz_inst_path+self.__config[SettingsCategories.PATHS.value][SettingsItems.PATH_BAT.value]
         }
+
+    def get_filenames(self):
+        return {
+            FilePath.JAR: self.__config[SettingsCategories.PATHS.value][SettingsItems.JAR.value],
+            FilePath.JAVA_PID: self.__config[SettingsCategories.PATHS.value][SettingsItems.JAVA_PID.value],
+            FilePath.APP_YML: self.__config[SettingsCategories.PATHS.value][SettingsItems.APP_YML.value],
+        }
+    
+    def get_host_addr(self):
+        return self.__config[SettingsCategories.GENERAL.value][SettingsItems.HOST_ADDR.value]
 
     def get_heartbeat_timer(self):
         return self.__config[SettingsCategories.TIMER.value][SettingsItems.HB.value]

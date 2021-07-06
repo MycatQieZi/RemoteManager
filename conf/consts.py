@@ -23,12 +23,12 @@ CONFIG = {
         "logging": logging.DEBUG
     },
     Envs.YMT.value:{
-        "host_addr":"",
+        "host_addr":"https://www.tongtongcf.com:10007",
         "api_prefix": "/v1/api/center818/box",
         "logging": logging.DEBUG
     },
     Envs.PROD.value:{
-        "host_addr":"",
+        "host_addr":"https://finear.ect888.com:6680",
         "api_prefix": "/v1/api/center818/box",
         "logging": logging.INFO
     }

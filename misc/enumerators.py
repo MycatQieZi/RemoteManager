@@ -26,6 +26,7 @@ class SettingsCategories(Enum):
 
 class SettingsItems(Enum):
     # general
+    HOST_ADDR='host_addr'
     ENV = 'env'
     LOGGING = 'logging'
     LOG_EXP = 'log_expiration'
@@ -57,6 +58,12 @@ class VersionInfo(Enum):
     REMARK = 'remark'
     STAT = 'status'
     CONFMAP = 'argumentConfigMap'
+
+class FS_Status(Enum):
+    OTHER = -1
+    FAIL_WAIT = 0
+    REGED = 1
+    NO_REG = 2
 
 @total_ordering
 class PatchCyclePhase(Enum):

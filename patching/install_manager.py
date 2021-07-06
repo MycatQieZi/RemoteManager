@@ -21,6 +21,8 @@ class InstallManager:
         self.lock_manager = LockManager()
         self.config_manager = ConfigManager()
         self.process_manager = ProcessManager()
+        self.paths = self.settings_manager.get_paths()
+        self.fnames = self.settings_manager.get_filenames()
         self.install_update_lock = self.lock_manager.install_update_lock 
         self.heartbeat_lock = self.lock_manager.heartbeat_lock
     
@@ -89,9 +91,9 @@ class InstallManager:
             Path(backup_dir).mkdir(parents=True, exist_ok=True)
             db_dir = self.settings_manager.get_sqlite_db_path()
             shutil.copytree(db_dir, backup_dir+"/data", dirs_exist_ok=True)
-            jar_path = self.settings_manager.get_QTHZ_inst_path()+"/icb-box.jar"
+            jar_path = self.paths[FilePath.JAR]
             shutil.copy2(jar_path, backup_dir)
-            conf_path = self.settings_manager.get_paths()[FilePath.CONFIG]
+            conf_path = self.paths[FilePath.CONFIG]
             shutil.copy2(conf_path, backup_dir)
             self.logger.info("文件备份完毕")    
         except Exception:
@@ -119,7 +121,7 @@ class InstallManager:
         shutil.rmtree(db_dir)
         shutil.copytree(backup_dir+"/data", db_dir, dirs_exist_ok=True)
         qthz_path = self.settings_manager.get_QTHZ_inst_path()
-        shutil.copy2(backup_dir+"\\icb-box.jar", qthz_path)
+        shutil.copy2(backup_dir+ self.fnames[FilePath.JAR], qthz_path)
         shutil.copy2(backup_dir+"\\configuration.ini", qthz_path+"\\conf")
         self.config_manager.load_config()
         self.logger.info("文件回滚完毕")
@@ -172,10 +174,15 @@ class InstallManager:
         self.update_sqlite_db(patch_dir_path, qthz_path, arg_conf_map)
 
         # TODO: replace JAR
-        jar_patch = patch_dir_path+"\\icb-box.jar"
+        jar_patch = patch_dir_path + self.fnames[FilePath.JAR]
         if exists(jar_patch):
             shutil.copy2(jar_patch, qthz_path)
             self.logger.debug("更替JAR包完成")
+        
+        yml_path = patch_dir_path+self.fnames[FilePath.APP_YML]
+        if exists(yml_path):
+            shutil.copy2(yml_path, qthz_path)
+            self.logger.debug("更替YAML配置文件完成")
 
         # TODO: replace lua scripts
         

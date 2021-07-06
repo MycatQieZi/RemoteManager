@@ -1,6 +1,7 @@
 DEFAULT_FILE_TEMPLATE = \
 """\
 [general]
+host_addr=https://finear.ect888.com:6680
 env=prod
 logging=info
 log_expiration=30
@@ -21,6 +22,6 @@ path_bat=\\DOS\\start.bat
 data=\data
 
 [timer]
-heartbeat=300
-versionCheck=14400
+heartbeat=30
+versionCheck=3600
 """

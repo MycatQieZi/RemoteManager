@@ -1,3 +1,4 @@
+from misc.enumerators import FS_Status
 from scheduler.lock_manager import LockManager
 from request.request_manager import RequestManager
 from yamlmanager import GetYamlStruct
@@ -45,14 +46,22 @@ class HeartBeatManager():
         struct.content['access_id'] = access_id
         struct.content['access_secret'] = access_secret
         struct.content['Freeswitch'] = freeswitch_status
-        struct.content['Reg_callbox'] = reg_info['reg_callbox']
-        struct.content['Reg_numconvert'] = reg_info['reg_numconvert']
+        struct.content['Reg_callbox'] = self.convert_fs_states(reg_info['reg_callbox'])
+        struct.content['Reg_numconvert'] = self.convert_fs_states(reg_info['reg_numconvert'])
         struct.content['Java'] = java_status
         struct.content['cpu'] = cpu_rate_info
         struct.content['mem'] = mem_rate_info
         struct.content['media_storage'] = '2G'
         return struct.content
     
+    def convert_fs_states(self, state_str):
+        try:
+            code = FS_Status[state_str].value
+        except:
+            code = -1
+        finally:
+            return code 
+
     def send_heartbeat(self):
         @with_lock(self.lock_manager.heartbeat_lock, logger=self.logger)
         @with_lock(self.lock_manager.install_update_lock, blocking=True, logger=self.logger)

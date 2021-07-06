@@ -15,7 +15,8 @@ class ConfigManager():
 
     def __init__(self):
         self.settings_manager = SettingsManager()
-        self.__host_address = CONFIG[self.env]['host_addr']
+        # self.__host_address = CONFIG[self.env]['host_addr']
+        self.__host_address = self.settings_manager.get_host_addr()
         self.__api_prefix = CONFIG[self.env]['api_prefix']
         self.tree_dict = {}
         self.fs_conf = copy.deepcopy(FS_CONF)
