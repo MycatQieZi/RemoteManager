@@ -1,0 +1,16 @@
+#BasicInfo:
+version:
+host_ip:
+callbox_ip:
+app_key:
+access_id:
+access_secret:
+#ServiceStatus:
+Freeswitch:
+Reg_callbox:
+Reg_numconvert:
+Java:
+#SystemInfo:
+cpu:
+mem:
+media_storage:
