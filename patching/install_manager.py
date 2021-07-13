@@ -1,3 +1,4 @@
+from utils.db_operator import DBOperator
 from processcontroller.processstatus import ProcessManager
 from conf.config import ConfigManager
 from scheduler.lock_manager import LockManager
@@ -21,6 +22,7 @@ class InstallManager:
         self.lock_manager = LockManager()
         self.config_manager = ConfigManager()
         self.process_manager = ProcessManager()
+        self.db_operator = DBOperator()
         self.paths = self.settings_manager.get_paths()
         self.fnames = self.settings_manager.get_filenames()
         self.install_update_lock = self.lock_manager.install_update_lock 
@@ -95,6 +97,8 @@ class InstallManager:
             shutil.copy2(jar_path, backup_dir)
             conf_path = self.paths[FilePath.CONFIG]
             shutil.copy2(conf_path, backup_dir)
+            yml_path = self.settings_manager.get_QTHZ_inst_path()+self.fnames[FilePath.APP_YML]
+            shutil.copy2(yml_path, backup_dir)
             self.logger.info("文件备份完毕")    
         except Exception:
             self.logger.error(traceback.format_exc())
@@ -123,10 +127,13 @@ class InstallManager:
         qthz_path = self.settings_manager.get_QTHZ_inst_path()
         shutil.copy2(backup_dir+ self.fnames[FilePath.JAR], qthz_path)
         shutil.copy2(backup_dir+"\\configuration.ini", qthz_path+"\\conf")
+        shutil.copy2(backup_dir+ self.fnames[FilePath.APP_YML], qthz_path)
         self.config_manager.load_config()
         self.logger.info("文件回滚完毕")
 
+    # 真正开始安装的流程
     def replace_files(self):
+        
         self.logger.debug("开始文件更替")
         patch_objs = self.patch_manager.patch_objs
         for index, patch_obj in enumerate(patch_objs):
@@ -213,28 +220,16 @@ class InstallManager:
         # if there exists a sql script to be exec-ed, 
         if(sql_script):
             self.logger.debug("需要执行SQL命令")
-            # find the old sqlite db source,
-            old_sqlite_file = None
-            onlyfiles = [f for f in listdir(db_dir) if isfile(join(db_dir, f))]
-            for file in onlyfiles:
-                parts = file.split('.')
-                if len(parts)<2:
-                    old_sqlite_file = file
-
-            # connect to it and execute sql on it
-            connection = sqlite3.connect(db_dir+"\\"+old_sqlite_file)
-            cursor = connection.cursor()
+            # call sql file execution
             with open(db_patch_dir+"\\"+sql_script, 'r', encoding='utf-8') as sql_file:
                 sql_as_string = sql_file.read()
                 try:
-                    cursor.executescript(sql_as_string)
+                    self.db_operator.execute_sql_file(sql_as_string)
                 except Exception:
-                    cursor.execute('rollback')
                     self.logger.error("SQL命令执行异常: %s", traceback.format_exc())
                     raise
-                finally:
-                    connection.close()
-                self.logger.debug("SQL命令完毕")
+                else:
+                    self.logger.debug("SQL脚本执行完毕")
 
         # copy all files from patch dir to data dir
         if should_update_data:

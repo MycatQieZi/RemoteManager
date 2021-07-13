@@ -23,7 +23,7 @@ class BoxRemoteManager:
         self.logger.info('BoxHelper Update Module is initializing...')
         self.init_managers()
         self.timers = []
-        if len(sys.argv)<2 or not sys.argv[1]=='debug':
+        if not self.settings_manager.dev_mode:
             self.init_timers()
 
 
@@ -75,6 +75,10 @@ class BoxRemoteManager:
     #     self.logger.debug("Acquired token: %s", self.auth_manager.get_token())
     #     self.request_manager.get_version_check()
 
+    def update_config_and_settings(self):
+        self.config_manager.load_config()
+        self.settings_manager.read_settings()
+
     def start_gui(self):
         self.info('Starting GUI...')
         toast_notification("证通智能精灵", "启动成功", "智能精灵助手已经启动, 并且在系统托盘后台运行")
@@ -82,7 +86,7 @@ class BoxRemoteManager:
         self.gui_manager = GUIManager(
             getUserToken=self.auth_manager.acquire_new_token,
             getVersionCheck=self.patch_manager.check_update,
-            updateConfig=self.config_manager.load_config,
+            updateConfig=self.update_config_and_settings,
             sendHeartbeat=self.heartbeat_manager.send_heartbeat,
             clearCache=self.install_manager.clear_download_cache,
             installUpdate=self.install_manager.install_update,

@@ -1,3 +1,4 @@
+from settings.settings_manager import SettingsManager
 from misc.decorators import singleton
 from utils.my_logger import logger
 import rsa
@@ -7,6 +8,7 @@ import rsa
 @logger
 class EncryptionManager():
     def __init__(self):
+        self.settings_manger = SettingsManager()
         self.local_pubkey_path = 'conf/RSA/local/pubkey.pem'  #本地RSA加密的公钥文件地址
         self.local_prikey_path = 'conf/RSA/local/prikey.pem'  #本地RSA加密的私钥文件地址
         self.remote_pubkey_path = 'conf/RSA/remote/pubkey.pem'  # 配置中心RSA加密的公钥文件地址

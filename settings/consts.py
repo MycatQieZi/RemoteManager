@@ -5,6 +5,7 @@ host_addr=https://finear.ect888.com:6680
 env=prod
 logging=info
 log_expiration=30
+debug_mode=off
 
 [paths]
 config=\conf\configuration.ini

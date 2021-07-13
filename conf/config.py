@@ -20,13 +20,14 @@ class ConfigManager():
         self.__api_prefix = CONFIG[self.env]['api_prefix']
         self.tree_dict = {}
         self.fs_conf = copy.deepcopy(FS_CONF)
-        self.fs_conf_path = self.settings_manager.get_paths()[FilePath.FS_CONF]
+        self.paths = self.settings_manager.get_paths()
+        # self.fs_conf_path = self.paths[FilePath.FS_CONF]
         self.load_config()
         self.logger.debug('Config Manager successfully initialized...')
 
     def load_config(self):
         try:
-            self.config = self.settings_manager.read_ini_into_config(self.settings_manager.get_paths()[FilePath.CONFIG])
+            self.config = self.settings_manager.read_ini_into_config(self.paths[FilePath.CONFIG])
             self.__version_num = self.config['QTHZ']['version']
             self.__version_code = self.config['QTHZ']['code']
             self.__appkey = self.config['appkey']['key']
@@ -39,7 +40,7 @@ class ConfigManager():
 
     def update_remote_config(self, arg_conf_map, version_num, version_code):
         self.logger.info("更新远程配置到本地")
-        ini_file_path = self.settings_manager.get_paths()[FilePath.CONFIG]
+        ini_file_path = self.paths[FilePath.CONFIG]
         config = self.settings_manager.read_ini_into_config(ini_file_path)
         config['QTHZ']['version'] = version_num
         config['QTHZ']['code'] = version_code
@@ -47,6 +48,7 @@ class ConfigManager():
             try:
                 section, ini_key = REMOTE_CONF_MAPPING[key]
             except KeyError:
+                self.logger.error("No mapping binded for key: %s", key)
                 continue
             else:
                 config[section][ini_key] = item
@@ -56,7 +58,7 @@ class ConfigManager():
         return self.__host_address
     
     def get_callbox_addr(self):
-        return self.config['FreeSWITCH']['callboxRealm']
+        return self.get_config_item_by_mapping('callboxRealm')
 
     def get_api_prefix(self):
         return self.__api_prefix
@@ -70,6 +72,15 @@ class ConfigManager():
 
     def get_version_info(self):
         return {'versionNum': self.__version_num, 'versionCode': self.__version_code}
+
+    def get_config_item_by_mapping(self, key):
+        try:
+            section, ini_key = REMOTE_CONF_MAPPING[key]
+        except KeyError:
+            self.logger.error("No mapping binded for key: %s", key)
+            raise
+        else:
+            return self.config[section][ini_key]
 
 # ---------------- FREESWITCH XML config update logic ------------------
     def save_fs_conf(self):
@@ -90,8 +101,8 @@ class ConfigManager():
     def init_tree_dict_procedure(self):
         for filename in XMLS:
             try:
-                self.logger.debug("读取FS配置: %s", self.fs_conf_path + filename)
-                tree = etree.parse(self.fs_conf_path + filename)
+                self.logger.debug("读取FS配置: %s", self.paths[FilePath.FS_CONF] + filename)
+                tree = etree.parse(self.paths[FilePath.FS_CONF] + filename)
             except OSError:
                 raise
             else:
@@ -115,9 +126,6 @@ class ConfigManager():
         else:
             self.logger.debug("最新FS配置: %s", self.fs_conf)
             return self.fs_conf
-        
-    def set_new_fs_path(self, new_path):
-        self.fs_conf_path = new_path
 
     def update_config(self, new_conf_obj):
         self.logger.debug("写入FS配置")
@@ -130,7 +138,7 @@ class ConfigManager():
 
         for name, tree in self.tree_dict.items():
             try:
-                tree.write(self.fs_conf_path + name + ".xml", pretty_print=True)
+                tree.write(self.paths[FilePath.FS_CONF] + name + ".xml", pretty_print=True)
             except PermissionError:
                 self.logger.error("FS配置写入失败, 配置文件没有写入权限")
 

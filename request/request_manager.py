@@ -33,6 +33,9 @@ class RequestManager():
     def get_file_download(self, version_code, local_filename, fn_set_progress):
         return self.api_manager.get_file_download(version_code, local_filename, fn_set_progress)
 
+    def post_up_task_status(self, task_op_flag):
+        pass
+
     def post_heartbeat_info(self, heartbeat_info):
         self.logger.debug('发送心跳包...')
         try:
