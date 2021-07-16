@@ -1,4 +1,5 @@
 import logging
+from patching.install_manager import InstallManager
 from scheduler.lock_manager import LockManager
 from settings.settings_manager import SettingsManager
 from misc.decorators import singleton, with_countdown, with_lock
@@ -10,7 +11,8 @@ from misc.enumerators import PatchStatus, UpgradeMark, PatchCyclePhase
 from misc.exceptions import FileDownloadError, ICBRequestError, NoFileError
 from pathlib import Path
 from gui.winrt_toaster import toast_notification
-import os, jsonpickle, shutil, hashlib, traceback, zipfile
+import os, jsonpickle, shutil, hashlib, traceback, zipfile, threading
+import patching.install_manager
 
 @singleton
 @logger
@@ -21,6 +23,7 @@ class PatchManager:
         self.settings_manager = SettingsManager()
         self.request_manager = RequestManager()
         self.check_update_lock = LockManager().version_check_lock
+        self.install_manager = InstallManager(self)
         self.meta_file_path = self.settings_manager.get_patch_meta_path()
         self.patch_dir_path = self.settings_manager.get_patch_dir_path()
         
@@ -77,20 +80,27 @@ class PatchManager:
     def file_download_phase(self):
         # self.logger.debug("content: %s", content)
         self.state = PatchCyclePhase.DOWNLOAD
-        if(UpgradeMark(self.upgrade_mark)==UpgradeMark.MANDATORY):
-            toast_notification("证通智能精灵", "软件更新", "发现可用的软件更新, 正在下载更新")
-            self.debug("Mandatory update")
-            try:
-                for index, patch_obj in enumerate(self.patch_objs):
-                    self.download_one(self.patch_objs[index])
+        toast_notification("证通智能精灵", "软件更新", "发现可用的软件更新, 正在下载更新")
+        try:
+            for index, patch_obj in enumerate(self.patch_objs):
+                self.download_one(self.patch_objs[index])
 
-            except FileDownloadError as err:
-                self.logger.error("下载失败! 原因: %s", err)
-                self.state = PatchCyclePhase.INCEPTION
-                return 0
-            self.debug("Download finished.")
+        except FileDownloadError as err:
+            self.logger.error("下载失败! 原因: %s", err)
+            self.state = PatchCyclePhase.INCEPTION
+            return 0
+        self.debug("Download finished.")
+        self.state = PatchCyclePhase.PENDING
+        if(UpgradeMark(self.upgrade_mark)==UpgradeMark.MANDATORY):
+            self.debug("Mandatory update")
+            toast_notification("证通智能精灵", "重要更新", "需要立即应用重要的更新, 您的外呼任务将会被自动暂停")
+            update_thread = threading.Thread(target=self.install_manager.install_update, name="ForcedUpdateThread")
+            update_thread.start()
+
+        elif(UpgradeMark(self.upgrade_mark)==UpgradeMark.OPTIONAL):
+            self.debug("Optional update")
             toast_notification("证通智能精灵", "下载完成", "新的软件更新已经准备完毕, 请您及时更新!")
-            self.state = PatchCyclePhase.PENDING
+            
         return 1  
 
     def download_one(self, patch_obj):

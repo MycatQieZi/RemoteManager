@@ -55,7 +55,7 @@ def with_retry(retries=3, interval=5):
                 except Exception:
                     if(countdown>0):
                         countdown-=1
-                        self.debug(f"执行失败, {str(interval)}秒后重试, 失败原因:\n%s", traceback.format_exc())
+                        self.debug(f"执行失败, {interval}秒后重试第{retries-countdown}/{retries}次, 失败原因:\n%s", traceback.format_exc())
                         time.sleep(interval)
                     else:
                         raise
@@ -63,3 +63,20 @@ def with_retry(retries=3, interval=5):
                     return result
         return fn_execution
     return wrapper
+
+def with_retry2(fn):
+    def fn_execution(self, *args, retries=3, interval=5, **kwargs):
+        countdown = retries
+        while True:
+            try:
+                result = fn(self, *args, **kwargs)
+            except Exception:
+                if(countdown>0):
+                    countdown-=1
+                    self.debug(f"执行失败, {interval}秒后重试第{retries-countdown}/{retries}次, 失败原因:\n%s", traceback.format_exc())
+                    time.sleep(interval)
+                else:
+                    raise
+            else:
+                return result
+    return fn_execution

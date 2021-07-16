@@ -1,27 +1,29 @@
+from request.request_manager import RequestManager
+from misc.exceptions import UpdateIsNoGo
 from utils.db_operator import DBOperator
 from processcontroller.processstatus import ProcessManager
 from conf.config import ConfigManager
 from scheduler.lock_manager import LockManager
 from misc.enumerators import FilePath, PatchCyclePhase, PatchStatus
-from patching.patch_manager import PatchManager
 from settings.settings_manager import SettingsManager
 from misc.decorators import singleton, with_lock
 from utils.my_logger import logger
 from pathlib import Path
 from os import listdir
-from os.path import isfile, join, exists
+from os.path import isfile, join, exists, splitext
 from gui.winrt_toaster import toast_notification
 import shutil, traceback, time, sqlite3, threading
 
 @singleton
 @logger
 class InstallManager:
-    def __init__(self):
+    def __init__(self, patch_manager):
         self.settings_manager = SettingsManager()
-        self.patch_manager = PatchManager()
+        self.patch_manager = patch_manager
         self.lock_manager = LockManager()
         self.config_manager = ConfigManager()
         self.process_manager = ProcessManager()
+        self.request_manager = RequestManager()
         self.db_operator = DBOperator()
         self.paths = self.settings_manager.get_paths()
         self.fnames = self.settings_manager.get_filenames()
@@ -56,10 +58,18 @@ class InstallManager:
                 self.logger.info("开始安装更新")
                 toast_notification("证通智能精灵", "软件更新", "开始安装软件更新...")
                 result = self.installation()
-            except Exception:
+            
+            except UpdateIsNoGo as nogo:
+                toast_notification("证通智能精灵", "更新暂停", nogo.cause())
+                self.logger.error(str(nogo))
+                # decide if update should be triggered manually, or automatically timed
+                # later on
                 return 0
+            except Exception:
+                raise
             else:
                 return result
+        
         try:    
             result = installation_driver()
         except Exception as e:
@@ -133,7 +143,6 @@ class InstallManager:
 
     # 真正开始安装的流程
     def replace_files(self):
-        
         self.logger.debug("开始文件更替")
         patch_objs = self.patch_manager.patch_objs
         for index, patch_obj in enumerate(patch_objs):
@@ -208,13 +217,13 @@ class InstallManager:
             self.logger.debug("需要更新SQL数据")
             onlyfiles = [f for f in listdir(db_patch_dir) if isfile(join(db_patch_dir, f))]
             for file in onlyfiles:
-                parts = file.split('.')
-                if len(parts)<2:
+                _, ext = splitext(file)
+                if ext=="":
                     sqlite_file = file
                 else:
-                    if parts[1]=='sql':
+                    if ext=='sql':
                         sql_script = file
-                    elif parts[1]=='db':
+                    elif ext=='db':
                         dotdb_file = file
         
         # if there exists a sql script to be exec-ed, 
@@ -223,6 +232,7 @@ class InstallManager:
             # call sql file execution
             with open(db_patch_dir+"\\"+sql_script, 'r', encoding='utf-8') as sql_file:
                 sql_as_string = sql_file.read()
+                self.logger.debug("已读取SQL脚本")
                 try:
                     self.db_operator.execute_sql_file(sql_as_string)
                 except Exception:
@@ -253,12 +263,21 @@ class InstallManager:
 
     def pause_all_operations(self):
         self.logger.debug("Halting all operations, triggering killswitch in...")
+
+        # 请求任务暂停接口, 会阻塞重试, 之后抛 No Go 信号
+        self.request_manager.post_pause_all_tasks()
+
+        # 调取FS呼出状态, 会阻塞重试, 之后抛No Go 信号
+        self.process_manager.freeswith_call_status()
+
+        # 停止Java和FS服务, 同步
+        self.process_manager.stop_freeswitch()
+        self.process_manager.stop_java()
+        # 异步
         # fs_stopper_thread = threading.Thread(target=self.process_manager.stopFreeswitch)
         # fs_stopper_thread.start() 
         # java_stopper_thread = threading.Thread(target=self.process_manager.stop_java)
         # java_stopper_thread.start()
-        self.process_manager.stop_freeswitch()
-        self.process_manager.stop_java()
         # countdown = 3
         # for i in range(countdown, 0, -1):
         #     self.logger.debug(i)
@@ -273,7 +292,10 @@ class InstallManager:
         starter_thread.start()
         self.config_manager.load_config()
         starter_thread.join()
-
+        try:
+            self.request_manager.post_resume_all_tasks()
+        except:
+            self.logger.error("请求恢复任务失败, 原因: %s", traceback.format_exc())
     
 
 

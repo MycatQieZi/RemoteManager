@@ -85,3 +85,11 @@ class PatchStatus(Enum):
     DOWNLOADED = 2
     INSTALLED = 3
     REVERTED = 4
+
+class TaskStatusRequestSignal(Enum):
+    PAUSE = 1
+    RESUME = 2
+
+class GetTasksAPIType(Enum):
+    UNFINISHED = "未完成"
+    PAUSED = "已暂停"
