@@ -1,6 +1,5 @@
 import logging, configparser, traceback, copy
-
-from PyQt5.QtCore import lowercasebase
+import processcontroller.local_encryption as locrypt
 from processcontroller.processstatus import FREESWITCH_PROCESS_NAME
 from misc.decorators import singleton
 from settings.settings_manager import SettingsManager
@@ -21,13 +20,17 @@ class ConfigManager():
         self.tree_dict = {}
         self.fs_conf = copy.deepcopy(FS_CONF)
         self.paths = self.settings_manager.get_paths()
+        self.qthz_path = self.settings_manager.get_QTHZ_inst_path()
+        self.salt_file = self.qthz_path + "\\salt.txt"
+        self.enc_conf_file_name = self.qthz_path + "\\conf\\configuration.ini.enc"
+        self.pw = "ect888.com"
         # self.fs_conf_path = self.paths[FilePath.FS_CONF]
         self.load_config()
         self.logger.debug('Config Manager successfully initialized...')
 
     def load_config(self):
         try:
-            self.config = self.settings_manager.read_ini_into_config(self.paths[FilePath.CONFIG])
+            self.config = self.settings_manager.read_encrypted_config()
             self.__version_num = self.config['QTHZ']['version']
             self.__version_code = self.config['QTHZ']['code']
             self.__appkey = self.config['appkey']['key']
@@ -37,6 +40,21 @@ class ConfigManager():
             self.logger.error(traceback.format_exc())
         else:
             self.logger.info("配置加载完成")
+
+    def read_encrypted_config(self):
+        self.logger.info("get_config_info Reading ini file")
+        try:
+            salt = locrypt.get_salt(self.salt_file)
+            key = locrypt.generate_key(self.pw, salt)
+            key = locrypt.refresh_key(self.enc_conf_file_name, self.salt_file, key)
+            decrypted_text = locrypt.file_decrypt(self.enc_conf_file_name, key)
+            config = configparser.RawConfigParser()
+            config.read_string(decrypted_text.decode("utf8"))
+            #logger.info(config.sections())
+            return config
+        except:
+            self.logger.error(traceback.format_exc())
+    
 
     def update_remote_config(self, arg_conf_map, version_num, version_code):
         self.logger.info("更新远程配置到本地")

@@ -1,3 +1,4 @@
+from conf.config import ConfigManager
 from misc.exceptions import UpdateIsNoGo
 from gui.winrt_toaster import toast_notification
 from misc.enumerators import FilePath
@@ -20,11 +21,12 @@ ICB_BOX_JAVA__PROC_NAME = 'java'
 @logger
 class ProcessManager:
     def __init__(self):
-        start = 'start'
         self.settings_manager = SettingsManager()
+        self.config_manager = ConfigManager()
         self.paths = self.settings_manager.get_paths()
         # self.fs_path = self.paths[FilePath.FS]
         self.qthz_path = self.settings_manager.get_QTHZ_inst_path()
+        self.qthz_config = self.config_manager.config
         # self.java_pid_file_path = self.paths[FilePath.JAVA_PID]
         # self.yaml_path = self.paths[FilePath.APP_YML]
         # self.config_path = self.paths[FilePath.CONFIG]
@@ -35,7 +37,7 @@ class ProcessManager:
         self.logger.info("启动前置服务")
         toast_notification("证通智能精灵", "正在启动", "正在启动智能精灵")
         try:
-            self.update_jar_app_yaml()
+            # self.update_jar_app_yaml()
             self.start_reload_freeswitch()
             self.start_reload_java()
             time.sleep(10)
@@ -233,13 +235,25 @@ class ProcessManager:
     def start_reload_java(self):
         self.logger.info('启动java')
         self.stop_java()
-        self.set_java_env()
         return self.start_java()
 
     def start_java(self):
         try:
             # popen 用列表传参数
-            order = ['java', '-jar', self.paths[FilePath.JAR], f'--spring.config.location={self.paths[FilePath.APP_YML]}']
+            # order = ['java', '-jar', self.paths[FilePath.JAR], f'--spring.config.location={self.paths[FilePath.APP_YML]}']
+            order = [
+                    'java', 
+                    '-jar', 
+                    self.paths[FilePath.JAR], 
+                    '--icb-box.version-num='+self.qthz_config["QTHZ"]["version"], 
+                    '--access-key-id='+self.qthz_config["accessid"]["id"],
+                    '--access-key-secret='+self.qthz_config["accesssecret"]["secret"],
+                    '--allow-ram=${RAM:10}',
+                    '--appkey='+self.qthz_config["appkey"]["key"],
+                    '--city-code='+self.qthz_config["city"]["num"],
+                    '--url-port='+self.qthz_config["host"]["adr"],
+                    '--spring.datasource.druid.url=jdbc:sqlite:'+self.qthz_path+'\data\\'+self.qthz_config["dbfile"]["name"]
+                    ]
             proc = subprocess.Popen(order, shell=False, creationflags=subprocess.DETACHED_PROCESS)
             self.update_java_pid(proc.pid)
             self.logger.debug("JAVA已启动, pid: %i", proc.pid)
@@ -260,39 +274,37 @@ class ProcessManager:
         with open(self.paths[FilePath.JAVA_PID], "w", encoding="utf-8") as pid_file: 
             pid_file.write(str(pid))
 
-
-    def set_java_env(self):
-        self.logger.debug('添加JAVA环境变量')
-        try:
-            p = subprocess.Popen(
-                ["cmd.exe", "/c", self.paths[FilePath.PATH_BAT]], 
-                # shell=True, 
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE, 
-                stderr=subprocess.STDOUT)
-        except:
-            self.logger.error(traceback.format_exc())
-            return 
-        curline = p.stdout.readline()
-        while (curline != b''):
-            #(curline)
-            curline = p.stdout.readline()
-        p.wait()
-        self.logger.info('添加JAVA环境变量完成')
-        #print(p.returncode)
-
+    # def set_java_env(self):
+    #     self.logger.debug('添加JAVA环境变量')
+    #     try:
+    #         p = subprocess.Popen(
+    #             ["cmd.exe", "/c", self.paths[FilePath.PATH_BAT]], 
+    #             # shell=True, 
+    #             stdin=subprocess.DEVNULL,
+    #             stdout=subprocess.PIPE, 
+    #             stderr=subprocess.STDOUT)
+    #     except:
+    #         self.logger.error(traceback.format_exc())
+    #         return 
+    #     curline = p.stdout.readline()
+    #     while (curline != b''):
+    #         #(curline)
+    #         curline = p.stdout.readline()
+    #     p.wait()
+    #     self.logger.info('添加JAVA环境变量完成')
+    #     #print(p.returncode)
     
-    def update_jar_app_yaml(self):
-        config = self.settings_manager.read_ini_into_config(self.paths[FilePath.CONFIG])
-        yml_data = self.settings_manager.get_yaml_info(self.paths[FilePath.APP_YML])
-        yml_data['appkey'] = "${APP_KEY:" + config["appkey"]["key"] + "}"
-        yml_data['access-key-id'] = "${ACCESS_KEY_ID:" + config["accessid"]["id"] + "}"
-        yml_data['access-key-secret'] = "${ACCESS_KEY_SECRET:" + config["accesssecret"]["secret"] + "}"
-        yml_data['city-code'] = "${CITY_CODE:" + config["city"]["num"] + "}"
-        yml_data['url-port'] = "${ICB-PORT:" + config["host"]["adr"] + "}"
-        yml_data['spring']['datasource']['druid']['url'] = f'jdbc:sqlite:{self.qthz_path}\\data\\{config["dbfile"]["name"]}'
-        self.settings_manager.write_yaml_info(self.paths[FilePath.APP_YML], yml_data)
-        self.logger.debug("修改JAR包Spring参数")
+    # def update_jar_app_yaml(self):
+    #     config = self.settings_manager.read_ini_into_config(self.paths[FilePath.CONFIG])
+    #     yml_data = self.settings_manager.get_yaml_info(self.paths[FilePath.APP_YML])
+    #     yml_data['appkey'] = "${APP_KEY:" + config["appkey"]["key"] + "}"
+    #     yml_data['access-key-id'] = "${ACCESS_KEY_ID:" + config["accessid"]["id"] + "}"
+    #     yml_data['access-key-secret'] = "${ACCESS_KEY_SECRET:" + config["accesssecret"]["secret"] + "}"
+    #     yml_data['city-code'] = "${CITY_CODE:" + config["city"]["num"] + "}"
+    #     yml_data['url-port'] = "${ICB-PORT:" + config["host"]["adr"] + "}"
+    #     yml_data['spring']['datasource']['druid']['url'] = f'jdbc:sqlite:{self.qthz_path}\\data\\{config["dbfile"]["name"]}'
+    #     self.settings_manager.write_yaml_info(self.paths[FilePath.APP_YML], yml_data)
+    #     self.logger.debug("修改JAR包Spring参数")
     
     
     
