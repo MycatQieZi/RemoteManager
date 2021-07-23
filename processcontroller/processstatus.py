@@ -1,8 +1,9 @@
+from misc.exceptions import UpdateIsNoGo
 from gui.winrt_toaster import toast_notification
 from misc.enumerators import FilePath
 from settings.settings_manager import SettingsManager
 from utils.my_logger import logger
-from misc.decorators import singleton
+from misc.decorators import singleton, with_retry
 import os
 import subprocess
 import traceback
@@ -70,7 +71,12 @@ class ProcessManager:
         else:
             return 1 if len(process) >= 1 else 0
               
-    
+    @with_retry(retries=3, interval=5)
+    def get_fs_call_status(self):
+        result = self.freeswith_call_status()
+        if(result):
+            raise UpdateIsNoGo("FreeSwitch仍有外呼任务在执行")
+
     def freeswith_call_status(self):
         status = self.is_freeswitch_running()
         if not status:

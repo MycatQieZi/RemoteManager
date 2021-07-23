@@ -17,7 +17,6 @@ lxml==4.6.3
 macholib==1.14
 markdown2==2.4.0
 MarkupSafe==2.0.1
-mock-server==0.3.9
 packaging==20.9
 pcapy==0.11.4
 pefile==2021.5.13
@@ -42,7 +41,6 @@ requests==2.25.1
 requests-toolbelt==0.9.1
 rsa==4.7.2
 setuptools==52.0.0.post20210125
-sip==4.19.13
 six==1.16.0
 tornado==4.3
 urllib3==1.26.4

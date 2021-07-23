@@ -1,16 +1,22 @@
 import logging
-from scheduler.lock_manager import LockManager
+from patching.install_manager import InstallManager
 from settings.settings_manager import SettingsManager
 from misc.decorators import singleton, with_countdown, with_lock
 from conf.config import ConfigManager
 from request.request_manager import RequestManager
 from patching.patch_obj import PatchObject
 from utils.my_logger import logger
-from misc.enumerators import PatchStatus, UpgradeMark, PatchCyclePhase
+from misc.enumerators import PatchStatus, ThreadLock, UpgradeMark, PatchCyclePhase
 from misc.exceptions import FileDownloadError, ICBRequestError, NoFileError
 from pathlib import Path
 from gui.winrt_toaster import toast_notification
-import os, jsonpickle, shutil, hashlib, traceback, zipfile
+import os, jsonpickle, shutil, hashlib, traceback, zipfile, threading, time
+import patching.install_manager
+
+
+def please_wait():
+    toast_notification("")
+
 
 @singleton
 @logger
@@ -20,40 +26,40 @@ class PatchManager:
         jsonpickle.set_decoder_options('json', encoding='utf8')
         self.settings_manager = SettingsManager()
         self.request_manager = RequestManager()
-        self.check_update_lock = LockManager().version_check_lock
+        self.install_manager = InstallManager(self)
         self.meta_file_path = self.settings_manager.get_patch_meta_path()
         self.patch_dir_path = self.settings_manager.get_patch_dir_path()
-        
 
+    @with_lock(ThreadLock.INSTALL_UPDATE)
+    @with_lock(ThreadLock.HEARTBEAT, blocking=True)
     def check_update(self):
-        @with_lock(self.check_update_lock, logger=self.logger)
-        def update_driver():
-                status = -1
-                self.load_meta()
-                # if not self.state == PatchCyclePhase.READY:
-                #     self.debug("Existing update sequence is in progress")
-                #     return 0
-                self.info("当前下载流程状态: %s", self.state.name)
-                if self.state == PatchCyclePhase.READY:
-                    status = self.check_for_update_phase()
-                elif self.state == PatchCyclePhase.INCEPTION:
-                    status = self.file_download_phase(timed=True, max_wait=3, randomly=True)
-                elif self.state == PatchCyclePhase.COMPLETE:
-                    status = self.check_for_update_phase()
-                
-                if(status==0): # something went wrong
-                    self.count_retry_once()
-        
-                self.dump_meta()  
-                return status 
-        
         try:  
-            result = update_driver()
+            result = self.update_driver()
         except Exception as e:
             self.logger.error(traceback.format_exc())
             result = 0
         finally:
             self.logger.debug("检查更新流程: %s", '完成' if result else '异常') 
+
+    def update_driver(self):
+        status = -1
+        self.load_meta()
+        # if not self.state == PatchCyclePhase.READY:
+        #     self.debug("Existing update sequence is in progress")
+        #     return 0
+        self.info("当前下载流程状态: %s", self.state.name)
+        if self.state == PatchCyclePhase.READY:
+            status = self.check_for_update_phase()
+        elif self.state == PatchCyclePhase.INCEPTION:
+            status = self.file_download_phase(timed=True, max_wait=3, randomly=True)
+        elif self.state == PatchCyclePhase.COMPLETE:
+            status = self.check_for_update_phase()
+        
+        if(status==0): # something went wrong
+            self.count_retry_once()
+
+        self.dump_meta()  
+        return status 
 
     def check_for_update_phase(self):
         try:
@@ -77,20 +83,31 @@ class PatchManager:
     def file_download_phase(self):
         # self.logger.debug("content: %s", content)
         self.state = PatchCyclePhase.DOWNLOAD
-        if(UpgradeMark(self.upgrade_mark)==UpgradeMark.MANDATORY):
-            toast_notification("证通智能精灵", "软件更新", "发现可用的软件更新, 正在下载更新")
-            self.debug("Mandatory update")
-            try:
-                for index, patch_obj in enumerate(self.patch_objs):
-                    self.download_one(self.patch_objs[index])
+        toast_notification("证通智能精灵", "软件更新", "发现可用的软件更新, 正在下载更新")
+        try:
+            for index, patch_obj in enumerate(self.patch_objs):
+                self.download_one(self.patch_objs[index])
 
-            except FileDownloadError as err:
-                self.logger.error("下载失败! 原因: %s", err)
-                self.state = PatchCyclePhase.INCEPTION
-                return 0
-            self.debug("Download finished.")
+        except FileDownloadError as err:
+            self.logger.error("下载失败! 原因: %s", err)
+            self.state = PatchCyclePhase.INCEPTION
+            return 0
+        self.debug("Download finished.")
+        self.state = PatchCyclePhase.PENDING
+        self.dump_meta() 
+        if(UpgradeMark(self.upgrade_mark)==UpgradeMark.MANDATORY):
+            self.debug("Mandatory update")
+            toast_notification("证通智能精灵", "重要更新", "需要立即应用重要的更新, 您的外呼任务将会被自动暂停")
+            # update_thread = threading.Thread(target=self.install_manager.installation_driver, name="ForcedUpdateThread")
+            # update_thread.start()
+            time.sleep(1)
+            self.install_manager.installation_driver()
+
+        elif(UpgradeMark(self.upgrade_mark)==UpgradeMark.OPTIONAL):
+            self.debug("Optional update")
             toast_notification("证通智能精灵", "下载完成", "新的软件更新已经准备完毕, 请您及时更新!")
-            self.state = PatchCyclePhase.PENDING
+        
+        self.reset_retry()
         return 1  
 
     def download_one(self, patch_obj):
@@ -173,7 +190,10 @@ class PatchManager:
         self.retry -= 1
         if(self.retry < 0):
             self.state = PatchCyclePhase.READY
-            self.retry = 5
+            self.reset_retry()
+
+    def reset_retry(self):
+        self.retry = 5
 
     def check_dl_progress(self, currIndex, totalIndex):
         progress = 100*currIndex/totalIndex

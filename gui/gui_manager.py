@@ -3,7 +3,6 @@ from utils.my_logger import logger
 from PyQt5.QtGui import * 
 from PyQt5.QtWidgets import * 
 from gui.sys_tray import SysTray
-from scheduler.lock_manager import LockManager
 
 import traceback, threading, time
 
@@ -21,19 +20,20 @@ class GUIManager():
         self.sendHeartbeatThread = None
         self.clearCacheThread = None
         self.installUpdateThread = None
+        self.revertUpdateThread = None
         self.threads = {
             'getUserToken': self.getUserTokenThread,
             'getVersionCheck': self.getVersionCheckThread,
             'updateConfig': self.updateConfigThread,
             'sendHeartbeat': self.sendHeartbeatThread,
             'clearCache': self.clearCacheThread,
-            'installUpdate': self.installUpdateThread
+            'installUpdate': self.installUpdateThread,
+            'revertToLast': self.revertUpdateThread
         }
 
         self.parent_exit = fns['safeExit']
         
         sys_tray_fn_kwargs = {
-            "revertToLast": fns['revertToLast'],
             "startQTHZ": fns['startQTHZ'],
             "safeExit": self.onClickSafeExit
         }

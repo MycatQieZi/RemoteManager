@@ -1,5 +1,4 @@
-from misc.enumerators import FS_Status
-from scheduler.lock_manager import LockManager
+from misc.enumerators import FS_Status, ThreadLock
 from request.request_manager import RequestManager
 from yamlmanager import GetYamlStruct
 from processcontroller.processstatus import ProcessManager
@@ -15,7 +14,6 @@ class HeartBeatManager():
     def __init__(self):
         self.config_manager = ConfigManager()
         self.request_manager = RequestManager()
-        self.lock_manager = LockManager()
         self.proc_manager = ProcessManager()
         self.config_manager.load_config()
 
@@ -46,8 +44,8 @@ class HeartBeatManager():
         struct.content['access_id'] = access_id
         struct.content['access_secret'] = access_secret
         struct.content['Freeswitch'] = freeswitch_status
-        struct.content['Reg_callbox'] = self.convert_fs_states(reg_info['reg_callbox'])
-        struct.content['Reg_numconvert'] = self.convert_fs_states(reg_info['reg_numconvert'])
+        struct.content['Reg_callbox'] = self.convert_fs_states(reg_info['reg_callbox']) if reg_info else -1
+        struct.content['Reg_numconvert'] = self.convert_fs_states(reg_info['reg_numconvert']) if reg_info else -1
         struct.content['Java'] = java_status
         struct.content['cpu'] = cpu_rate_info
         struct.content['mem'] = mem_rate_info
@@ -62,19 +60,19 @@ class HeartBeatManager():
         finally:
             return code 
 
+    @with_lock(ThreadLock.HEARTBEAT)
+    @with_lock(ThreadLock.INSTALL_UPDATE, blocking=True)
     def send_heartbeat(self):
-        @with_lock(self.lock_manager.heartbeat_lock, logger=self.logger)
-        @with_lock(self.lock_manager.install_update_lock, blocking=True, logger=self.logger)
-        def send():
-            self.logger.debug("发送心跳")
+        self.send()
+
+    def send(self):
+        self.logger.debug("发送心跳")
+        try:
             self.proc_manager.keep_fs_alive()
             self.proc_manager.keep_java_alive()
             hb_info = self.fill_heartbeat_struct()
-            try:
-                self.request_manager.post_heartbeat_info(hb_info)
-            except Exception as e:
-                self.error(traceback.format_exc())
-        send()
-
+            self.request_manager.post_heartbeat_info(hb_info)
+        except Exception as e:
+            self.error(traceback.format_exc())
 
 

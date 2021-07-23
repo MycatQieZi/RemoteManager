@@ -29,6 +29,7 @@ def with_connection_and_transaction(transaction=False):
             self.conn_pool[conn_id] = connection
             cursor = connection.cursor()
             try:
+                self.logger.debug("执行SQLITE操作")
                 result = fn(self, cursor, *args, **kwargs)
             except Exception:
                 transaction_driver(transaction, connection.rollback, self.logger, "手动回滚事务, 原因:\n"+traceback.format_exc())
@@ -53,7 +54,7 @@ class DBOperator():
 
     @with_connection_and_transaction()    
     def get_all_ongoing_task_ids(self, cursor, *_, **__):
-        statement = "SELECT id FROM `task` WHERE `status`=1 OR `status`=2;"
+        statement = "SELECT id FROM `task` WHERE `status`=1 OR `status`=2 OR `status`=5;"
         cursor.execute(statement)
         query_result = cursor.fetchall()
         task_ids = list(map(lambda tuple: tuple[0], query_result))
@@ -63,6 +64,7 @@ class DBOperator():
     @with_connection_and_transaction(transaction=True)
     def execute_sql_file(self, cursor, *args, **_):
         sql_as_string = args[0]
+        self.logger.debug("开始执行SQL语句")
         cursor.executescript(sql_as_string)
         
 

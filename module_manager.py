@@ -11,7 +11,6 @@ from gui.gui_manager import GUIManager
 from gui.winrt_toaster import toast_notification
 from heartbeat.heartbeatdata import HeartBeatManager
 from scheduler.repeating_timer import RepeatingTimer
-from scheduler.lock_manager import LockManager
 from utils.my_logger import logger
 import threading, sys
 
@@ -28,7 +27,6 @@ class BoxRemoteManager:
 
 
     def init_config(self):
-        self.lock_manager = LockManager()
         self.settings_manager = SettingsManager()
         try:
             self.config_manager = ConfigManager()

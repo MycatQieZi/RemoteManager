@@ -1,8 +1,11 @@
+import traceback
+from utils.db_operator import DBOperator
 from misc.decorators import singleton
+from misc.exceptions import FileDownloadError, HttpRequestError, ICBRequestError, NotFoundError, UpdateIsNoGo
+from misc.enumerators import GetTasksAPIType, TaskStatusRequestSignal
 from request.auth_manager import AuthenticationManager
 from request.api import APIManager
 from conf.config import ConfigManager
-from misc.exceptions import FileDownloadError, HttpRequestError, ICBRequestError
 from utils.my_logger import logger
 from requests_toolbelt import MultipartEncoder
 import requests
@@ -16,8 +19,9 @@ class RequestManager():
         self.host_addr = self.config_manager.get_host_address()
         self.api_prefix = self.config_manager.get_api_prefix()
         self.api_manager = APIManager()
-
+        self.db_operator = DBOperator()
         self.logger.debug(f"{self.module_name} successfully initialized...")
+
 
     def get_version_check(self):
         version_info = self.config_manager.get_version_info()
@@ -30,11 +34,54 @@ class RequestManager():
                           upgrade_list)
         return content
     
+
     def get_file_download(self, version_code, local_filename, fn_set_progress):
         return self.api_manager.get_file_download(version_code, local_filename, fn_set_progress)
 
-    def post_up_task_status(self, task_op_flag):
-        pass
+    
+    def get_task_list(self, req_type):
+        try:
+            content = self.api_manager.get_tasks(req_type) 
+        except NotFoundError:
+            self.logger.error("找不到请求%s任务列表的接口", req_type.value)
+            raise
+        except:
+            self.logger.error("请求%s任务列表失败, 原因: %s", req_type.value, traceback.format_exc())
+            return []
+        else:
+            task_list = list(content) if not content==None and not content=="" else []
+            self.logger.debug("获取到的%s任务列表: %s", req_type.value, str(task_list))
+            return task_list
+
+    def post_pause_all_tasks(self):
+        try:
+            task_ids = self.get_task_list(GetTasksAPIType.UNFINISHED)
+        except NotFoundError:
+            task_ids = self.db_operator.get_all_ongoing_task_ids()
+        except:
+            task_ids = self.db_operator.get_all_ongoing_task_ids()
+        try:
+            result = None
+            if(len(task_ids)>0):
+                result = self.api_manager.post_up_task_status(task_ids, TaskStatusRequestSignal.PAUSE.value)
+        except:
+            self.logger.error("请求任务暂停失败, 原因: %s", traceback.format_exc())
+            raise UpdateIsNoGo("暂停任务失败", traceback.format_exc())
+        else:
+            self.logger.debug("暂停任务请求结果: %s", str(result))
+
+
+    def post_resume_all_tasks(self):
+        try:
+            task_ids = self.get_task_list(GetTasksAPIType.PAUSED)
+            result = None
+            if(task_ids and len(task_ids)>0):
+                result = self.api_manager.post_up_task_status(task_ids, TaskStatusRequestSignal.RESUME.value)
+        except:
+            raise
+        else:
+            self.logger.debug("恢复任务请求结果: %s", str(result))
+
 
     def post_heartbeat_info(self, heartbeat_info):
         self.logger.debug('发送心跳包...')
@@ -50,6 +97,7 @@ class RequestManager():
 
         self.logger.debug('发送心跳包结果: %s', content)
         return content
+
 
     def post_logs_info(self, path, filename):
         auth = {
